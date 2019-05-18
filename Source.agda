@@ -1,8 +1,8 @@
 {-# OPTIONS --rewriting --cubical #-}
 open import Primitives
-open import AlternativeTypeSystem
+open import TypeSystem
 
-module AlternativeSource where
+module Source where
 
   --Build a bridge that encodes the graph relation of a function, based on the function's source, using Weld.
   /_/ : ∀{ℓ}{C D : Set ℓ} (f :{¶} C → D) → (𝕀 → Set ℓ)

@@ -1,6 +1,6 @@
 {-# OPTIONS --cubical --rewriting #-}
 
-module AlternativeTypeSystem where
+module TypeSystem where
 open import Primitives public
 open import Agda.Primitive hiding (i0 ; i1) public
 
