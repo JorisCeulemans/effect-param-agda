@@ -1,8 +1,8 @@
 {-# OPTIONS --cubical --rewriting #-}
 module Functors where
 
-open import AlternativeTypeSystem
-open import AlternativeSource
+open import TypeSystem
+open import Source
 
 record Functor (ℓ : Level) : Set (lsuc ℓ) where
   constructor functor
@@ -23,7 +23,45 @@ hom F = ¶fst(snd(unfunctor F))
 funct-id : ∀ {ℓ} (F :{#} Functor ℓ) → {X :{#} Set ℓ} → {x : obj F X} → hom F id x ≡ x
 funct-id F = ¶fst(¶snd(snd(unfunctor F)))
 
-module SquareCompositionFunctor {ℓ} where
+module Composition {ℓ}
+                   (F :{#} Functor ℓ)
+                   (A B C :{#} Set ℓ)
+                   (f : A → B)
+                   (g :{¶} B → C)
+                   where
+
+  -- Bridge from B to C
+  g-bridge :{#} 𝕀 → Set ℓ
+  g-bridge = / g /
+
+  -- Bridge from A → B to A → C
+  func-bridge :{#} 𝕀 → Set ℓ
+  func-bridge i = A → (g-bridge i)
+
+  -- Path from b : B to g(b) : C
+  g-path : B → (i :{#} 𝕀) → g-bridge i
+  g-path b i = push g i b
+
+  -- Path from f : A → B to g ∘ f : A → C
+  func-path : (i :{#} 𝕀) → A → g-bridge i
+  func-path i a = g-path (f a) i
+
+  -- Path from F f : F A → F B to F (g ∘ f) : F A → F C
+  F-path : (i :{#} 𝕀) → obj F A → obj F (g-bridge i)
+  F-path i = hom F (func-path i)
+
+  -- Path from F g : F B → F C to F id : F C → F C
+  Fg-pull : (i :{#} 𝕀) → obj F (g-bridge i) → obj F C
+  Fg-pull i = hom F (pull g i)
+
+  -- Homogeneous path from F g (F f fa) : F C to F id (F (g ∘ f) fa) : F C
+  final-path : (fa : obj F A) (i :{#} 𝕀) → obj F C
+  final-path fa i = Fg-pull i (F-path i fa)
+
+  composition : (fa : obj F A) → hom F g (hom F f fa) ≡ hom F (g ∘ f) fa
+  composition fa = path-to-eq (final-path fa) • funct-id F
+
+module SquareCommute {ℓ} where
   postulate
     F : Functor ℓ
     A B C D :{#} Set ℓ
@@ -78,44 +116,8 @@ module SquareCompositionFunctor {ℓ} where
   final-path : (fa : obj F A) (i :{#} 𝕀) → obj F D
   final-path fa i = Fh-pull i (F-path i (Fg-path fa i))
 
-  commF : (fa : obj F A) → hom F h (hom F f1 fa) ≡ hom F f2 ((hom F g) fa)
-  commF fa = path-to-eq (final-path fa)
-
-module CompositionFunctorProof {ℓ}
-                               (F : Functor ℓ)
-                               (A B C :{#} Set ℓ)
-                               (f :{¶} A → B)
-                               (g :{¶} B → C)
-                               where
-
-  -- Bridge from B to C
-  g-bridge :{#} 𝕀 → Set ℓ
-  g-bridge = / g /
-
-  -- Bridge from A → B to A → C
-  func-bridge :{#} 𝕀 → Set ℓ
-  func-bridge i = A → (g-bridge i)
-
-  -- Path from b : B to g(b) : C
-  g-path : B → (i :{#} 𝕀) → g-bridge i
-  g-path b i = push g i b
-
-  -- Path from f : A → B to g ∘ f : A → C
-  func-path : (i :{#} 𝕀) → A → g-bridge i
-  func-path i a = g-path (f a) i
-
-  -- Path from F f : F A → F B to F (g ∘ f) : F A → F C
-  F-path : (i :{#} 𝕀) → obj F A → obj F (g-bridge i)
-  F-path i = hom F {A} {g-bridge i} (func-path i)
-
-  Fg-pull : (i :{#} 𝕀) → obj F (g-bridge i) → obj F C
-  Fg-pull i = hom F (pull g i)
-
-  final-path : (fa : obj F A) (i :{#} 𝕀) → obj F C
-  final-path fa i = Fg-pull i (F-path i fa)
-
-  compF : (fa : obj F A) → hom F g (hom F f fa) ≡ hom F (g ∘ f) fa
-  compF fa = path-to-eq (final-path fa) • funct-id F
+  square-commute : (fa : obj F A) → hom F h (hom F f1 fa) ≡ hom F f2 (hom F g fa)
+  square-commute fa = path-to-eq (final-path fa)
 
 module Examples where
   id-functor : ∀ {ℓ} → Functor ℓ
@@ -135,5 +137,20 @@ module Examples where
                              [¶ (λ {X Y :{#} Set ℓ} f → map f) ,
                              [¶ (λ {X :{#} Set ℓ} {xs : List X} → map-id) ,
                              tt ] ] ]
+
+  hom-functor : ∀ {ℓ} (X : Set ℓ) → Functor ℓ
+  hom-functor {ℓ} X = functor [ (λ Y → (X → Y)) ,
+                              [¶ (λ {Y₁ Y₂ :{#} Set ℓ} f g → f ∘ g) ,
+                              [¶ (λ {Y :{#} Set ℓ} {g : X → Y} → refl g) ,
+                              tt ] ] ]
+
+  mb-map-id : ∀ {ℓ} {A :{#} Set ℓ} {ma : Maybe A} → mb-map id ma ≡ ma
+  mb-map-id {_} {A} {ma} = maybe {B = λ my → mb-map id my ≡ my} (λ x → refl _) (refl _) ma
+
+  maybe-functor : ∀ {ℓ} → Functor ℓ
+  maybe-functor {ℓ} = functor [ Maybe ,
+                              [¶ (λ {X Y :{#} Set ℓ} f → mb-map f) ,
+                              [¶ (λ {X :{#} Set ℓ} {mx : Maybe X} → mb-map-id) ,
+                              tt ] ] ]
 
 open Examples public

@@ -330,8 +330,13 @@ postulate
 {-# REWRITE bool-rw1 bool-rw2 #-}
 
 infix  0 if_then_else_
-if_then_else_ : ∀ {a} {A : Set a} → Bool → A → A → A
+if_then_else_ : ∀ {a} {A :{#} Set a} → Bool → A → A → A
 if_then_else_ b t f = bool t f b
+
+infix 0 ifp_thenp_elsep_
+ifp_thenp_elsep_ : ∀ {a} {A :{#} Bool → Set a} → (b : Bool) → ((b ≡ true) → A true) → ((b ≡ false) → A false) → A b
+ifp_thenp_elsep_ = bool (λ tr fa → tr (refl true)) (λ tr fa → fa (refl false))
+
 
 _+_ : ∀{ℓ} → Set ℓ → Set ℓ → Set ℓ
 A + B = Σ Bool \ b → if b then A else B
@@ -435,3 +440,32 @@ reverse l = list [] ((λ h _ rev-t → append rev-t h)) l
 
 sum : List Nat → Nat
 sum l = list zero (λ n _ s → n +Nat s) l
+
+---------------
+-- Maybe
+---------------
+
+postulate
+  Maybe : ∀ {ℓ} → Set ℓ → Set ℓ
+  just : ∀ {ℓ} {A :{#} Set ℓ} → A → Maybe A
+  nothing : ∀ {ℓ} {A :{#} Set ℓ} → Maybe A
+  maybe : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
+            → (jst : (a : A) → B (just a))
+            → (ntg : B nothing)
+            → (ma : Maybe A)
+            → B ma
+  maybe-rw-ntg : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
+                   → (jst : (a : A) → B (just a))
+                   → (ntg : B nothing)
+                   → maybe {B = B} jst ntg nothing ≡ ntg
+  maybe-rw-jst : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
+                   → (jst : (a : A) → B (just a))
+                   → (ntg : B nothing)
+                   → (a : A)
+                   → maybe {B = B} jst ntg (just a) ≡ jst a
+
+{-# REWRITE maybe-rw-ntg #-}
+{-# REWRITE maybe-rw-jst #-}
+
+mb-map : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Set ℓB} → (A → B) → Maybe A → Maybe B
+mb-map f ma = maybe (λ a → just (f a)) nothing ma
