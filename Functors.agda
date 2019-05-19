@@ -34,15 +34,11 @@ module Composition {k ℓ}
   g-bridge :{#} 𝕀 → Set k
   g-bridge = / g /
 
-  -- Bridge from A → B to A → C
-  func-bridge :{#} 𝕀 → Set k
-  func-bridge i = A → (g-bridge i)
-
   -- Path from b : B to g(b) : C
   g-path : B → (i :{#} 𝕀) → g-bridge i
   g-path b i = push g i b
 
-  -- Path from f : A → B to g ∘ f : A → C
+  -- Path from f a : B to (g ∘ f) a : C
   func-path : (i :{#} 𝕀) → A → g-bridge i
   func-path i a = g-path (f a) i
 
@@ -51,19 +47,28 @@ module Composition {k ℓ}
   F-path i = hom F (func-path i)
 
   -- Path from F g : F B → F C to F id : F C → F C
-  Fg-pull : (i :{#} 𝕀) → obj F (g-bridge i) → obj F C
-  Fg-pull i = hom F (pull g i)
+  Fpullg-path : (i :{#} 𝕀) → obj F (g-bridge i) → obj F C
+  Fpullg-path i = hom F (pull g i)
 
   -- Homogeneous path from F g (F f fa) : F C to F id (F (g ∘ f) fa) : F C
   final-path : (fa : obj F A) (i :{#} 𝕀) → obj F C
-  final-path fa i = Fg-pull i (F-path i fa)
+  final-path fa i = Fpullg-path i (F-path i fa)
 
+  -- Final result
   composition : (fa : obj F A) → hom F g (hom F f fa) ≡ hom F (g ∘ f) fa
   composition fa = path-to-eq (final-path fa) • funct-id F
 
+  -- The term composition' proves directly that hom F g ∘ hom F f ≡ hom F (g ∘ f), which
+  -- could also be proved by applying function extensionality to the term composition.
+  final-path' : (i :{#} 𝕀) → obj F A → obj F C
+  final-path' i = (Fpullg-path i) ∘ (F-path i)
+
+  composition' : (hom F g) ∘ (hom F f) ≡ hom F (g ∘ f)
+  composition' = path-to-eq final-path' • cong (λ h → h ∘ (hom F (g ∘ f))) (funext {f = λ fc → hom F id fc} (λ x → funct-id F))
+
 module SquareCommute {k ℓ} where
   postulate
-    F : Functor k ℓ
+    F :{#} Functor k ℓ
     A B C D :{#} Set k
     f1 : A → B
     f2 : C → D
@@ -71,27 +76,17 @@ module SquareCommute {k ℓ} where
     h :{¶} B → D
     comm : (a : A) → h (f1 a) ≡ f2 (g a)
 
-  Fid : {X :{#} Set k} → {x : obj F X} → (¶fst (snd (unfunctor F))) id x ≡ x
-  Fid = funct-id F
-
   {-# REWRITE comm #-}
-  {-# REWRITE Fid #-}
 
+  -- Bridge from A to C
   g-bridge :{#} 𝕀 → Set k
   g-bridge = / g /
 
+  -- Bridge from B to D
   h-bridge :{#} 𝕀 → Set k
   h-bridge = / h /
 
-  -- Bridge from A → B to C → D
-  func-bridge :{#} 𝕀 → Set k
-  func-bridge i = (g-bridge i) → (h-bridge i)
-
-  -- Path from a : A to g(a) : C
-  g-path : A → (i :{#} 𝕀) → g-bridge i
-  g-path a i = push g i a
-
-  -- Path from b : B to h(b) : D
+  -- Path from b : B to h b : D
   h-path : B → (i :{#} 𝕀) → h-bridge i
   h-path b i = push h i b
 
@@ -107,17 +102,33 @@ module SquareCommute {k ℓ} where
   F-path : (i :{#} 𝕀) → obj F (g-bridge i) → obj F (h-bridge i)
   F-path i = hom F (func-path i)
 
-  Fg-path : obj F A → (i :{#} 𝕀) → obj F (g-bridge i)
-  Fg-path fa i = (hom F (push g i)) fa
+  -- Path from F id : F A → F A to F g : F A → F B
+  Fpushg-path : (i :{#} 𝕀) → obj F A → obj F (g-bridge i)
+  Fpushg-path i = hom F (push g i)
 
-  Fh-pull : (i :{#} 𝕀) → obj F (h-bridge i) → obj F D
-  Fh-pull i = hom F (pull h i)
+  -- Path from F h : F B → F D to F id : F D → F D
+  Fpullh-path : (i :{#} 𝕀) → obj F (h-bridge i) → obj F D
+  Fpullh-path i = hom F (pull h i)
 
+  -- Homogeneous path from F h (F f1 (F id fa)) : F D to F id (F f2 (F g fa)) : F D
   final-path : (fa : obj F A) (i :{#} 𝕀) → obj F D
-  final-path fa i = Fh-pull i (F-path i (Fg-path fa i))
+  final-path fa i = Fpullh-path i (F-path i (Fpushg-path i fa))
 
+  -- Final result
   square-commute : (fa : obj F A) → hom F h (hom F f1 fa) ≡ hom F f2 (hom F g fa)
-  square-commute fa = path-to-eq (final-path fa)
+  square-commute fa = cong (λ x → hom F h (hom F f1 x)) (sym (funct-id F)) • path-to-eq (final-path fa) • funct-id F
+
+  -- Again the two terms below provide a proof of hom F h ∘ hom F f1 ≡ hom F f2 ∘ hom F g
+  -- at the function level. This can also be proved by applying function extensionality
+  -- to the term square-commute.
+  final-path' : (i :{#} 𝕀) → obj F A → obj F D
+  final-path' i = (Fpullh-path i) ∘ (F-path i) ∘ (Fpushg-path i)
+
+  square-commute' : hom F h ∘ hom F f1 ≡ hom F f2 ∘ hom F g
+  square-commute' = cong (λ x → hom F h ∘ hom F f1 ∘ x) (sym Fid=id) • path-to-eq final-path' • cong (λ x → x ∘ hom F f2 ∘ hom F g) Fid=id
+    where
+      Fid=id : {X :{#} Set k} → hom F {X} id ≡ id
+      Fid=id = funext (λ x → funct-id F)
 
 module Examples where
   id-functor : ∀ {ℓ} → Functor ℓ ℓ
