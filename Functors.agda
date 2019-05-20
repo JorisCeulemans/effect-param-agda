@@ -148,11 +148,24 @@ module NaturalTransformation {k ℓ : Level}
   Gpullf-path : (i :{#} 𝕀) → obj G (f-bridge i) → obj G B
   Gpullf-path i = hom G (pull f i)
 
+  -- Homogeneous path from G f (ρ A (F id fa)) : G B to G id (ρ B (F f fa))
   final-path : (fa : obj F A) → (i :{#} 𝕀) → obj G B
   final-path fa i = Gpullf-path i (ρ (f-bridge i) (Fpushf-path i fa))
 
+  -- Final result
   naturality : (fa : obj F A) → hom G f (ρ A fa) ≡ ρ B (hom F f fa)
   naturality fa = cong (λ x → hom G f (ρ A x)) (sym (funct-id F)) • path-to-eq (final-path fa) • funct-id G
+
+  -- A direct proof that G f ∘ ρ A ≡ ρ B ∘ F f, this can also be proved from the term naturality
+  -- using function extensionality.
+  final-path' : (i :{#} 𝕀) → obj F A → obj G B
+  final-path' i = Gpullf-path i ∘ ρ (f-bridge i) ∘ Fpushf-path i
+
+  naturality' : hom G f ∘ ρ A ≡ ρ B ∘ hom F f
+  naturality' = cong (λ x → hom G f ∘ ρ A ∘ x) (sym (Hid=id {F})) • (path-to-eq final-path') • cong (λ x → x ∘ ρ B ∘ hom F f) (Hid=id {G})
+    where
+      Hid=id : {H :{#} Functor k ℓ} {X :{#} Set k} → hom H {X} id ≡ id
+      Hid=id {H} = funext (λ x → funct-id H)
 
 module Examples where
   id-functor : ∀ {ℓ} → Functor ℓ ℓ
