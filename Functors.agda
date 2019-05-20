@@ -66,13 +66,13 @@ module Composition {k ℓ}
   composition' : (hom F g) ∘ (hom F f) ≡ hom F (g ∘ f)
   composition' = path-to-eq final-path' • cong (λ h → h ∘ (hom F (g ∘ f))) (funext {f = λ fc → hom F id fc} (λ x → funct-id F))
 
-module SquareCommute {k ℓ} (F :{#} Functor k ℓ) (A B C D :{#} Set k) (g :{¶} A → C) (f2 : C → D) where
+module SquareCommute {k ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
---    F :{#} Functor k ℓ
---    A B C D :{#} Set k
+    F :{#} Functor k ℓ
+    A B C D :{#} Set k
     f1 : A → B
---    f2 : C → D
---    g : A → C
+    f2 : C → D
+    g :{¶} A → C
     h :{¶} B → D
     comm : (a : A) → h (f1 a) ≡ f2 (g a)
 
