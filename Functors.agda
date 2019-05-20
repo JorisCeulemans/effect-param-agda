@@ -130,6 +130,30 @@ module SquareCommute {k ℓ} where
       Fid=id : {X :{#} Set k} → hom F {X} id ≡ id
       Fid=id = funext (λ x → funct-id F)
 
+module NaturalTransformation {k ℓ : Level}
+                             (F G :{#} Functor k ℓ)
+                             (ρ : (X :{#} Set k) → obj F X → obj G X)
+                             (A B :{#} Set k)
+                             (f :{¶} A → B)
+                             where
+  -- Bridge from A to B
+  f-bridge :{#} 𝕀 → Set k
+  f-bridge = / f /
+
+  -- Path from F id : F A → F A to F f : F A → F B
+  Fpushf-path : (i :{#} 𝕀) → obj F A → obj F (f-bridge i)
+  Fpushf-path i = hom F (push f i)
+
+  -- Path from G f : G A → G B to G id : G B → G B
+  Gpullf-path : (i :{#} 𝕀) → obj G (f-bridge i) → obj G B
+  Gpullf-path i = hom G (pull f i)
+
+  final-path : (fa : obj F A) → (i :{#} 𝕀) → obj G B
+  final-path fa i = Gpullf-path i (ρ (f-bridge i) (Fpushf-path i fa))
+
+  naturality : (fa : obj F A) → hom G f (ρ A fa) ≡ ρ B (hom F f fa)
+  naturality fa = cong (λ x → hom G f (ρ A x)) (sym (funct-id F)) • path-to-eq (final-path fa) • funct-id G
+
 module Examples where
   id-functor : ∀ {ℓ} → Functor ℓ ℓ
   id-functor {ℓ} = functor [ id ,
