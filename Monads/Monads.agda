@@ -23,6 +23,9 @@ return M = ¶fst(snd(unpremonad M))
 bind : ∀ {ℓ} (M :{#} Premonad ℓ) → {X Y :{#} Set ℓ} → type M X → (X → type M Y) → type M Y
 bind M = ¶fst(¶snd(snd(unpremonad M)))
 
+trivial : ∀ {ℓ} (M : Premonad ℓ) → ⊤
+trivial M = ¶snd(¶snd(snd(unpremonad M)))
+
 premonad-⊤-irrelevant : ∀ {ℓ} (M : Premonad ℓ) (x : ⊤)
                           → premonad [ type M ,
                                       [¶ (λ {X :{#} Set ℓ} → return M {X}) ,
