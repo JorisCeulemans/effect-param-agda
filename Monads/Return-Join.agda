@@ -3,7 +3,6 @@ module Monads.Return-Join where
 
 open import TypeSystem
 open import Functors
-open import Monads.Monads
 
 record Monad-rj (ℓ : Level) : Set (lsuc ℓ) where
   constructor monad-rj
