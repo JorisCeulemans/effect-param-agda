@@ -73,7 +73,7 @@ module Composition {k ℓ}
   final-path' i = (Fpullg-path i) ∘ (F-path i)
 
   composition' : (hom F g) ∘ (hom F f) ≡ hom F (g ∘ f)
-  composition' = path-to-eq final-path' • cong (λ h → h ∘ (hom F (g ∘ f))) (funext {f = λ fc → hom F id fc} (λ x → funct-id F))
+  composition' = path-to-eq final-path' • cong (λ h → h ∘ (hom F (g ∘ f))) (funct-id' F)
 
 module SquareCommute {k ℓ} where
   postulate
@@ -134,10 +134,7 @@ module SquareCommute {k ℓ} where
   final-path' i = (Fpullh-path i) ∘ (F-path i) ∘ (Fpushg-path i)
 
   square-commute' : hom F h ∘ hom F f1 ≡ hom F f2 ∘ hom F g
-  square-commute' = cong (λ x → hom F h ∘ hom F f1 ∘ x) (sym Fid=id) • path-to-eq final-path' • cong (λ x → x ∘ hom F f2 ∘ hom F g) Fid=id
-    where
-      Fid=id : {X :{#} Set k} → hom F {X} id ≡ id
-      Fid=id = funext (λ x → funct-id F)
+  square-commute' = cong (λ x → hom F h ∘ hom F f1 ∘ x) (sym (funct-id' F)) • path-to-eq final-path' • cong (λ x → x ∘ hom F f2 ∘ hom F g) (funct-id' F)
 
 module NaturalTransformation {k ℓ : Level}
                              (F G :{#} Functor k ℓ)
@@ -171,10 +168,7 @@ module NaturalTransformation {k ℓ : Level}
   final-path' i = Gpullf-path i ∘ ρ (f-bridge i) ∘ Fpushf-path i
 
   naturality' : hom G f ∘ ρ A ≡ ρ B ∘ hom F f
-  naturality' = cong (λ x → hom G f ∘ ρ A ∘ x) (sym (Hid=id {F})) • (path-to-eq final-path') • cong (λ x → x ∘ ρ B ∘ hom F f) (Hid=id {G})
-    where
-      Hid=id : {H :{#} Functor k ℓ} {X :{#} Set k} → hom H {X} id ≡ id
-      Hid=id {H} = funext (λ x → funct-id H)
+  naturality' = cong (λ x → hom G f ∘ ρ A ∘ x) (sym (funct-id' F)) • (path-to-eq final-path') • cong (λ x → x ∘ ρ B ∘ hom F f) (funct-id' G)
 
 module Examples where
   id-functor : ∀ {ℓ} → Functor ℓ ℓ
