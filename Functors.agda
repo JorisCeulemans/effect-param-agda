@@ -23,6 +23,15 @@ hom F = ¶fst(snd(unfunctor F))
 funct-id : ∀ {k ℓ} (F :{#} Functor k ℓ) → {X :{#} Set k} → {x : obj F X} → hom F id x ≡ x
 funct-id F = ¶fst(¶snd(snd(unfunctor F)))
 
+funct-id' : ∀ {k ℓ} (F :{#} Functor k ℓ) {X :{#} Set k} → hom F {X} id ≡ id
+funct-id' F = funext (λ x → funct-id F)
+
+_∘funct_ : ∀ {ℓ1 ℓ2 ℓ3} → Functor ℓ2 ℓ3 → Functor ℓ1 ℓ2 → Functor ℓ1 ℓ3
+G ∘funct F = functor [ obj G ∘ obj F ,
+                     [¶ (λ {X Y :{#} Set _} f → hom G (hom F f)) ,
+                     [¶ (λ {X :{#} Set _} {x} → cong (λ h → hom G h x) (funct-id' F) • funct-id G) ,
+                     tt ] ] ]
+
 module Composition {k ℓ}
                    (F :{#} Functor k ℓ)
                    (A B C :{#} Set k)
