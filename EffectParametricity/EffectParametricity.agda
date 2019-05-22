@@ -1,5 +1,5 @@
 {-# OPTIONS --cubical --rewriting #-}
-module Effect-Parametricity.EffectParametricity where
+module EffectParametricity.EffectParametricity where
 
 open import TypeSystem
 open import Monads.Monads
