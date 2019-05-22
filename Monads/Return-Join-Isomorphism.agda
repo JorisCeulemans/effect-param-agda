@@ -12,11 +12,17 @@ pmrj-to-pm Mrj = premonad [ obj (funct Mrj) ,
                           [¶ ((λ mx k → (μ Mrj) (hom (funct Mrj) k mx))) ,
                           tt ] ] ]
 
-mrj-to-m : ∀ {ℓ} → (Mrj : Premonad-rj ℓ) → (Mrjmon :{¶} IsMonad-rj Mrj) → IsMonad (pmrj-to-pm Mrj)
-mrj-to-m Mrj Mrjmon = monad [¶ (λ {_ _ :{#} Set _} {_} {k} → (cong (λ x → μ Mrj x) {!η-nat Mrj!} • η-law1 Mrjmon)) ,
-                            [¶ {!!} ,
-                            [¶ {!!} ,
+mrj-to-m : ∀ {ℓ} → (Mrj : Premonad-rj ℓ) → (Mrjmon : IsMonad-rj Mrj) → IsMonad (pmrj-to-pm Mrj)
+mrj-to-m Mrj Mrjmon = monad [¶ (λ {_ _ :{#} Set _} {_} {k :{¶} _} → (cong (λ x → μ Mrj x) (η-nat Mrj) • η-law1 Mrjmon)) ,
+                            [¶ (λ {_ :{#} Set _} {_} → η-law2 Mrjmon) ,
+                            [¶ (λ {_ _ _ :{#} Set _} {_} {k} {q :{¶} _} → cong (λ x → μ Mrj x) (μ-nat Mrj)
+                                                                           • μ-law Mrjmon
+                                                                           • cong (λ x → μ Mrj x) (funct-comp • funct-comp)) ,
                             tt ] ] ]
+                        where
+                          funct-comp : {X Y Z :{#} Set _} {f : X → Y} {g :{¶} Y → Z} {mx : obj (funct Mrj) X}
+                                          → hom (funct Mrj) g (hom (funct Mrj) f mx) ≡ hom (funct Mrj) (g ∘ f) mx
+                          funct-comp {X} {Y} {Z} {f} {g} {mx} = Composition.composition (funct Mrj) X Y Z f g mx
 
 m-to-pmrj : ∀ {ℓ} → {M : Premonad ℓ} → (Mmon : IsMonad M) → Premonad-rj ℓ
 m-to-pmrj {_} {M} Mmon = premonad-rj [ functor [ type M ,
@@ -32,13 +38,3 @@ m-to-mrj {_} {M} Mmon = monad-rj [¶ (λ {_ :{#} Set _} {_} → assoc-law Mmon �
                                  [¶ (λ {_ :{#} Set _} {_} → return-law1 Mmon) ,
                                  [¶ (λ {_ :{#} Set _} {_} → assoc-law Mmon • (cong (bind M _) (funext λ x → return-law1 Mmon) • return-law2 Mmon) ) ,
                                  tt ] ] ]
-
-{-
-iso1 : ∀ {ℓ} → Monad-rj ℓ → Monad ℓ
-iso1 {ℓ} MA = monad [ premonad  [ (obj (funct MA)) , 
-                                [¶ (λ {X :{#} Set _} → η MA) ,
-                                [¶ (λ fx k → (μ MA) (hom (funct MA) k fx)) , tt ] ] ] ,
-                    [¶ {!(cong (λ x → μ MA x) (η-nat MA) • η-law1 MA)!} ,
-                {!(η-law2 MA)
-                (cong (λ x → μ MA x) (μ-nat MA) • (μ-law MA) • (cong (λ x → μ MA x) (funct-comp (funct MA) • funct-comp (funct MA))))!} ] ]
--}

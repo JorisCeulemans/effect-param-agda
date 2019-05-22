@@ -33,7 +33,7 @@ G ∘funct F = functor [ obj G ∘ obj F ,
                      tt ] ] ]
 
 module Composition {k ℓ}
-                   (F :{#} Functor k ℓ)
+                   (F : Functor k ℓ)
                    (A B C :{#} Set k)
                    (f : A → B)
                    (g :{¶} B → C)
@@ -75,7 +75,7 @@ module Composition {k ℓ}
   composition' : (hom F g) ∘ (hom F f) ≡ hom F (g ∘ f)
   composition' = path-to-eq final-path' • cong (λ h → h ∘ (hom F (g ∘ f))) (funct-id' F)
 
-module SquareCommute {k ℓ} where
+module SquareCommute {k ℓ} (idDummy : Set) where
   postulate
     F :{#} Functor k ℓ
     A B C D :{#} Set k

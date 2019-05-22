@@ -11,9 +11,9 @@ id-premonad = premonad [ id ,
                        tt ] ] ]           
 
 id-monad : ∀ {ℓ} → IsMonad id-premonad
-id-monad {ℓ} = monad [¶ (λ {_ _ :{#} Set ℓ} {_} {_} → refl _) ,
+id-monad {ℓ} = monad [¶ (λ {_ _ :{#} Set ℓ} {_} {_ :{¶} _} → refl _) ,
                      [¶ (λ {_ :{#} Set ℓ} {_} → refl _) ,
-                     [¶ (λ {_ _ _ :{#} Set ℓ} {_} {_} {_} → refl _) ,
+                     [¶ (λ {_ _ _ :{#} Set ℓ} {_} {_} {_ :{¶} _} → refl _) ,
                      tt ] ] ]
 
 maybe-premonad : ∀ {ℓ} → Premonad ℓ
@@ -33,9 +33,9 @@ maybe-assoc-law {ℓ} {X} {Y} {Z} {mx} {k} {q} = maybe {B = λ mx'' → maybe q 
                                                      mx
 
 maybe-monad : ∀ {ℓ} → IsMonad maybe-premonad
-maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {_} {_} → refl _ ) ,
+maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {_} {_ :{¶} _} → refl _ ) ,
                         [¶ (λ {X :{#} Set ℓ} {mx} → maybe-return-law2) ,
-                        [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k} {q} → maybe-assoc-law {mx = mx}) ,
+                        [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k} {q :{¶} _} → maybe-assoc-law {mx = mx}) ,
                         tt ] ] ]
 
 record Magma (ℓ : Level) : Set (lsuc ℓ) where

@@ -14,7 +14,7 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
     κmon : IsMonad κ
     a : A
 
-  κ-return-law1 : {X Y :{#} Set ℓ} {x : X} {q : X → type κ Y} →  ¶fst (¶snd (snd (unpremonad κ))) (¶fst (snd (unpremonad κ)) x) q ≡ q x
+  κ-return-law1 : {X Y :{#} Set ℓ} {x : X} {q :{¶} X → type κ Y} →  ¶fst (¶snd (snd (unpremonad κ))) (¶fst (snd (unpremonad κ)) x) q ≡ q x
   κ-return-law1 = return-law1 κmon
 
   {-# REWRITE κ-return-law1 #-}
