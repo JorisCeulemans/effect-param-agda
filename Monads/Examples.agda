@@ -48,19 +48,55 @@ record Magma (ℓ : Level) : Set (lsuc ℓ) where
 open Magma
 
 carrier : ∀ {ℓ} → Magma ℓ → Set ℓ
-carrier M = fst (unmagma M)
+carrier mgm = fst (unmagma mgm)
 
-op : ∀ {ℓ} (M :{#} Magma ℓ) → carrier M → carrier M → carrier M
-op M x y = ¶fst (snd (unmagma M)) x y
+op : ∀ {ℓ} (mgm :{#} Magma ℓ) → carrier mgm → carrier mgm → carrier mgm
+op mgm x y = ¶fst (snd (unmagma mgm)) x y
 
-magma-syntax : ∀ {ℓ} (M :{#} Magma ℓ) → carrier M → carrier M → carrier M
+magma-syntax : ∀ {ℓ} (mgm :{#} Magma ℓ) → carrier mgm → carrier mgm → carrier mgm
 magma-syntax = op
 
-syntax magma-syntax M x y = x ·⟨ M ⟩ y
+syntax magma-syntax mgm x y = x ·⟨ mgm ⟩ y
 
-writer-premonad : ∀ {k ℓ} → (M : Magma k) → (m :{¶} carrier M) → Premonad (k ⊔ ℓ)
-writer-premonad M m = premonad [ (λ X → X × (carrier M)) ,
-                               [¶ (λ {X :{#} Set _} x → [ x , m ]) ,
-                               [¶ (λ {X Y :{#} Set _} x,n k → [ fst (k (fst x,n)) , snd x,n ·⟨ M ⟩ snd (k (fst x,n)) ]) ,
-                               tt ] ] ]
+record IsMonoid {ℓ : Level} (mgm : Magma ℓ) : Set (lsuc ℓ) where
+  constructor monoid
+  field
+    unmonoid : ¶Σ[ e ∈ carrier mgm ]
+               ¶Σ[ left-unit ∈ ({x : carrier mgm} → e ·⟨ mgm ⟩ x ≡ x) ]
+               ¶Σ[ right-unit ∈ ({x : carrier mgm} → x ·⟨ mgm ⟩ e ≡ x) ]
+               ¶Σ[ assoc ∈ ({x y z : carrier mgm} → (x ·⟨ mgm ⟩ y) ·⟨ mgm ⟩ z ≡ x ·⟨ mgm ⟩ (y ·⟨ mgm ⟩ z)) ]
+               ⊤
 
+open IsMonoid
+
+mono-unit : ∀ {ℓ} {mgm :{#} Magma ℓ} (mgm-mono :{#} IsMonoid mgm) → carrier mgm
+mono-unit mgm-mono = ¶fst (unmonoid mgm-mono)
+
+mono-left-unit : ∀ {ℓ} {mgm :{#} Magma ℓ} (mgm-mono :{#} IsMonoid mgm) {x : carrier mgm} → (mono-unit mgm-mono) ·⟨ mgm ⟩ x ≡ x
+mono-left-unit mgm-mono = ¶fst (¶snd (unmonoid mgm-mono))
+
+mono-right-unit : ∀ {ℓ} {mgm :{#} Magma ℓ} (mgm-mono :{#} IsMonoid mgm) {x : carrier mgm} → x ·⟨ mgm ⟩ (mono-unit mgm-mono) ≡ x
+mono-right-unit mgm-mono = ¶fst (¶snd (¶snd (unmonoid mgm-mono)))
+
+mono-assoc : ∀ {ℓ}  {mgm :{#} Magma ℓ} (mgm-mono :{#} IsMonoid mgm) {x y z : carrier mgm} → (x ·⟨ mgm ⟩ y) ·⟨ mgm ⟩ z ≡ x ·⟨ mgm ⟩ (y ·⟨ mgm ⟩ z)
+mono-assoc mgm-mono = ¶fst (¶snd (¶snd (¶snd (unmonoid mgm-mono))))
+
+writer-premonad : ∀ {k} ℓ → (mgm : Magma k) → (m :{¶} carrier mgm) → Premonad (k ⊔ ℓ)
+writer-premonad ℓ mgm m = premonad [ (λ X → X × (carrier mgm)) ,
+                                   [¶ (λ {X :{#} Set _} x → [ x , m ]) ,
+                                   [¶ (λ {X Y :{#} Set _} x,n k → [ fst (k (fst x,n)) , snd x,n ·⟨ mgm ⟩ snd (k (fst x,n)) ]) ,
+                                   tt ] ] ]
+
+writer-monad : ∀ {k ℓ} {mgm : Magma k} (mgm-mono : IsMonoid mgm) → IsMonad (writer-premonad ℓ mgm (mono-unit mgm-mono))
+writer-monad mgm-mono = monad [¶ (λ {_ _ :{#} Set _} {x} {k} → cong (λ z → [ fst (k x) , z ]) (mono-left-unit mgm-mono)) ,
+                              [¶ (λ {_ :{#} Set _} {x,m} → cong (λ z → [ fst x,m , z ]) (mono-right-unit mgm-mono)) ,
+                              [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ]) (mono-assoc mgm-mono)) ,
+                              tt ] ] ]
+{-
+wr-monad-monoid : ∀ {k ℓ} {X : Set (k ⊔ ℓ)} {x :{¶} X} {mgm : Magma k} {m :{¶} carrier mgm} → IsMonad (writer-premonad ℓ mgm m) → IsMonoid mgm
+wr-monad-monoid {_} {_} {X} {x} {mgm} {m} wr-mon = monoid [¶ m ,
+                                                          [¶ (λ {n} → cong snd (return-law1 wr-mon {X = X} {x = x} {k = {!λ z → [ z , n ]!}})) ,
+                                                          [¶ {!!} ,
+                                                          [¶ {!!} ,
+                                                          tt ] ] ] ]
+-}
