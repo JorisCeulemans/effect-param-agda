@@ -1,6 +1,6 @@
 # Effect Parametricity Using Agda
 
-This repository contain proofs of some results involving monads in general and effect parametricity in particular.
+This repository contains proofs of some results involving monads in general and effect parametricity in particular.
 The effect parametricity results are based on the paper "Free Theorems Involving Type Constructor Classes" by Janis Voigtländer (2009).
 
 The proofs are written in the extension of Agda accompanying the paper "Parametric Quantifiers for Dependent Type Theory" by Andreas Nuyts, Andrea Vezzosi and Dominique Devriese (2017), available at the [parametric branch](https://github.com/agda/agda/tree/parametric) of the Agda repository.
