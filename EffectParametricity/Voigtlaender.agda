@@ -174,6 +174,7 @@ module MonadMorphism+ {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path : (i :{#} 𝕀) → type κ2 A
   final-path i = pull (morphism h) i (f-path i)
 
+  -- Theorems 3 and 4 from Voigländer (2009)
   thm : morphism h (f κ1 Fκ1a) ≡ f κ2 (hom F (morphism h) Fκ1a)
   thm = cong (λ x → morphism h (f κ1 x)) (sym (funct-id F))
         • cong (λ x → morphism h (f (premonad [ type κ1 , [¶ (λ {_ :{#} Set _} → return κ1) , [¶ (λ {_ _ :{#} Set _} → bind κ1) , x ] ] ]) (hom F id Fκ1a)))
@@ -233,39 +234,39 @@ module MorePolymorphic {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   g-bridge :{#} 𝕀 → Set ℓ
   g-bridge = / g /
 
-  -- Path from (hom F (fmap κ1 id) Fκ1a) to (hom F (fmap κ2 g)) (hom F h Fκ1a)
+  -- Path from (hom F (fmap κ1 id) (hom F id Fκ1a)) to (hom F (fmap κ2 g)) (hom F h Fκ1a)
   ghFκ1a-path : (i :{#} 𝕀) → obj F (type-constr-bridge i (g-bridge i))
   ghFκ1a-path i = hom F (fmap (pm-bridge i) (push g i)) (hFκ1a-path i)
 
-  -- Path from (f κ1 (hom F (fmap κ1 id) Fκ1a)) to (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a)))
+  -- Path from (f κ1 (hom F (fmap κ1 id) (hom F id Fκ1a))) to (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a)))
   f-path : (i :{#} 𝕀) → type-constr-bridge i (obj F (g-bridge i))
   f-path i = f (pm-bridge i) (ghFκ1a-path i)
 
-  -- Path from (h (f κ1 (hom F (fmap κ1 id) Fκ1a))) to (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a)))
+  -- Path from (h (f κ1 (hom F (fmap κ1 id) (hom F id Fκ1a)))) to (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a)))
   almost-final-path : (i :{#} 𝕀) → type κ2 (obj F (g-bridge i))
   almost-final-path i = pull (morphism h) i (f-path i)
 
-  -- Homogeneous path from (fmap κ2 (hom F g) (h (f κ1 (hom F (fmap κ1 id) Fκ1a)))) to (fmap κ2 (hom F id) (f κ2 ((map (fmap κ2 g)) (map h l))))
+  -- Homogeneous path from (fmap κ2 (hom F g) (h (f κ1 (hom F (fmap κ1 id) (hom F id Fκ1a))))) to (fmap κ2 (hom F id) (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a))))
   final-path : (i :{#} 𝕀) → type κ2 (obj F B)
   final-path i = (fmap κ2 (hom F (pull g i))) (almost-final-path i)
 
+  -- Theorem 5 from Voigtländer (2009)
   thm : fmap κ2 (hom F g) (morphism h (f κ1 Fκ1a)) ≡ f κ2 ((hom F (fmap κ2 g)) (hom F (morphism h) Fκ1a))
   thm = cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 z))) (sym (funct-id F))
-        • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F z Fκ1a)))) (funext (λ z → sym (return-law2 κ1mon)))
-{-        • (cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F (fmap κ1 id) z)))) (sym (refl _))-}
-        • cong (λ z → fmap (premonad [ type κ2 ,
-                                      [¶ (λ {_ :{#} Set _} → return κ2) ,
-                                      [¶ (λ {_ _ :{#} Set _} → bind κ2) ,
-                                      z ] ] ])
-                            (hom F g) (morphism h (f κ1 (hom F (fmap κ1 id) Fκ1a))))
-               (unique-⊤ (trivial κ2) tt)
-        • cong (λ z → fmap (pm-bridge i1) (hom F g) (morphism h (f (premonad [ type κ1 ,
-                                                                              [¶ (λ {_ :{#} Set _} → return κ1) ,
-                                                                              [¶ (λ {_ _ :{#} Set _} → bind κ1) ,
-                                                                              z ] ] ])
-                                                                    (hom F (fmap κ1 id) Fκ1a))))
+        • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F z Fκ1a)))) (funext (λ _ → sym (return-law2 κ1mon)))
+        • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F (fmap κ1 id) z)))) (sym (funct-id F))
+        • cong (λ z → fmap κ2 (hom F g) (morphism h (f (premonad [ type κ1 ,
+                                                                  [¶ (λ {_ :{#} Set _} → return κ1) ,
+                                                                  [¶ (λ {_ _ :{#} Set _} → bind κ1) ,
+                                                                  z ] ] ])
+                                                        (hom F (fmap κ1 id) (hom F id Fκ1a)))))
                (unique-⊤ (trivial κ1) tt)
-        • {!path-to-eq final-path
-        • {!?
-        • cong (λ z → bind κ2 (almost-final-path i1) (return κ2 ∘ z)) ?
-        • return-law2 κ2mon!}!}
+        • path-to-eq final-path
+        • cong (λ z → (fmap κ2 (hom F id) (f (premonad [ type κ2 ,
+                                                        [¶ (λ {_ :{#} Set _} → return κ2) ,
+                                                        [¶ (λ {_ _ :{#} Set _} → bind κ2) ,
+                                                        z ] ] ])
+                                              ((hom F (fmap κ2 g)) (hom F (morphism h) Fκ1a)))))
+               (unique-⊤ tt (trivial κ2))
+        • cong (λ z → fmap κ2 z (f κ2 (hom F (fmap κ2 g) (hom F (morphism h) Fκ1a)))) (funct-id' F)
+        • return-law2 κ2mon
