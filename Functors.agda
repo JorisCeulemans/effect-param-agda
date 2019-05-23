@@ -75,7 +75,7 @@ module Composition {k ℓ}
   composition' : (hom F g) ∘ (hom F f) ≡ hom F (g ∘ f)
   composition' = path-to-eq final-path' • cong (λ h → h ∘ (hom F (g ∘ f))) (funct-id' F)
 
-module SquareCommute {k ℓ} (idDummy : Set) where
+module SquareCommute {k ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     F :{#} Functor k ℓ
     A B C D :{#} Set k
