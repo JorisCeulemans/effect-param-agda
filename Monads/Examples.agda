@@ -92,11 +92,3 @@ writer-monad mgm-mono = monad [¶ (λ {_ _ :{#} Set _} {x} {k} → cong (λ z �
                               [¶ (λ {_ :{#} Set _} {x,m} → cong (λ z → [ fst x,m , z ]) (mono-right-unit mgm-mono)) ,
                               [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ]) (mono-assoc mgm-mono)) ,
                               tt ] ] ]
-{-
-wr-monad-monoid : ∀ {k ℓ} {X : Set (k ⊔ ℓ)} {x :{¶} X} {mgm : Magma k} {m :{¶} carrier mgm} → IsMonad (writer-premonad ℓ mgm m) → IsMonoid mgm
-wr-monad-monoid {_} {_} {X} {x} {mgm} {m} wr-mon = monoid [¶ m ,
-                                                          [¶ (λ {n} → cong snd (return-law1 wr-mon {X = X} {x = x} {k = {!λ z → [ z , n ]!}})) ,
-                                                          [¶ {!!} ,
-                                                          [¶ {!!} ,
-                                                          tt ] ] ] ]
--}
