@@ -30,7 +30,7 @@ m-to-pmrj {_} {M} Mmon = premonad-rj [ functor [ type M ,
                                                [¶ (λ {_ :{#} Set _} {_} → return-law2 Mmon) ,
                                                tt ] ] ] ,
                                      [¶ (λ {_ :{#} Set _} → return M) ,
-                                     [¶ ((λ {_ :{#} Set _} → λ mmx → bind M mmx id)) ,
+                                     [¶ ((λ {_ :{#} Set _} mmx → bind M mmx id)) ,
                                      tt ] ] ]
 
 m-to-mrj : ∀ {ℓ} → {M : Premonad ℓ} → (Mmon : IsMonad M) → IsMonad-rj (m-to-pmrj Mmon)
