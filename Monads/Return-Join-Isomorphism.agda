@@ -25,10 +25,7 @@ mrj-to-m Mrj Mrjmon = monad [¶ (λ {_ _ :{#} Set _} {_} {k :{¶} _} → (cong (
                           funct-comp {X} {Y} {Z} {f} {g} {mx} = Composition.composition (funct Mrj) X Y Z f g mx
 
 m-to-pmrj : ∀ {ℓ} → {M : Premonad ℓ} → (Mmon : IsMonad M) → Premonad-rj ℓ
-m-to-pmrj {_} {M} Mmon = premonad-rj [ functor [ type M ,
-                                               [¶ ((λ f mx → bind M mx ((return M) ∘ f))) ,
-                                               [¶ (λ {_ :{#} Set _} {_} → return-law2 Mmon) ,
-                                               tt ] ] ] ,
+m-to-pmrj {_} {M} Mmon = premonad-rj [ monad-funct Mmon ,
                                      [¶ (λ {_ :{#} Set _} → return M) ,
                                      [¶ ((λ {_ :{#} Set _} mmx → bind M mmx id)) ,
                                      tt ] ] ]

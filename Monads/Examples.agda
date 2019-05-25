@@ -38,6 +38,18 @@ maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {_} {_ :{¶} _} → refl _ 
                         [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k} {q :{¶} _} → maybe-assoc-law {mx = mx}) ,
                         tt ] ] ]
 
+state-premonad : ∀ {k} ℓ → (S : Set k) → Premonad (k ⊔ ℓ)
+state-premonad ℓ S = premonad [ (λ X → (S → X × S)) ,
+                              [¶ (λ {X :{#} Set _} x s → [ x , s ]) ,
+                              [¶ (λ {X Y :{#} Set _} sx k s → k (fst (sx s)) (snd (sx s))) ,
+                              tt ] ] ]
+
+state-monad : ∀ {k ℓ} (S : Set k) → IsMonad (state-premonad ℓ S)
+state-monad S = monad [¶ (λ {X Y :{#} Set _} {x} {k :{¶} _} → refl (k x)) ,
+                      [¶ (λ {X :{#} Set _} {sx} → refl sx) ,
+                      [¶ (λ {X Y Z :{#} Set _} {sx} {k} {q :{¶} _} → refl _) ,
+                      tt ] ] ]
+
 record Magma (ℓ : Level) : Set (lsuc ℓ) where
   constructor magma
   field

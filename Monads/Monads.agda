@@ -64,11 +64,11 @@ assoc-law : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y Z :{#} Se
                     → bind M (bind M fx k) q ≡ bind M fx (λ x → bind M (k x) q)
 assoc-law Mmon = ¶fst(¶snd(¶snd(unmonad Mmon)))
 
-monad-funct : ∀ {ℓ} (M : Premonad ℓ) → IsMonad M → Functor ℓ ℓ
-monad-funct M Mmon = functor [ type M ,
-                                 [¶ (λ {X Y :{#} Set _} → fmap M) ,
-                                 [¶ (λ {X :{#} Set _} {_} → return-law2 Mmon) ,
-                                 tt ] ] ]
+monad-funct : ∀ {ℓ} {M : Premonad ℓ} → IsMonad M → Functor ℓ ℓ
+monad-funct {_} {M} Mmon = functor [ type M ,
+                                   [¶ (λ {X Y :{#} Set _} → fmap M) ,
+                                   [¶ (λ {X :{#} Set _} {_} → return-law2 Mmon) ,
+                                   tt ] ] ]
 
 record MonadMorphism {ℓ : Level} (M1 M2 : Premonad ℓ) : Set (lsuc ℓ) where
   constructor monad-morphism
