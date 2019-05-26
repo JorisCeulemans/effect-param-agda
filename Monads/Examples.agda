@@ -27,7 +27,8 @@ maybe-return-law2 {ℓ} {_} {mx} = maybe {B = λ mx' → maybe just nothing mx' 
 
 maybe-assoc-law : ∀ {ℓ} {X Y Z :{#} Set ℓ} {mx : Maybe X} {k : X → Maybe Y} {q : Y → Maybe Z}
                            → maybe {B = λ mx' → Maybe Z} q nothing (maybe k nothing mx) ≡ maybe (λ x → maybe q nothing (k x)) nothing mx
-maybe-assoc-law {ℓ} {X} {Y} {Z} {mx} {k} {q} = maybe {B = λ mx'' → maybe q nothing (maybe k nothing mx'') ≡ maybe (λ x → maybe q nothing (k x)) nothing mx''}
+maybe-assoc-law {ℓ} {X} {Y} {Z} {mx} {k} {q} = maybe {B = λ mx'' → maybe q nothing (maybe k nothing mx'') ≡
+                                                                    maybe (λ x → maybe q nothing (k x)) nothing mx''}
                                                      (λ x → refl (maybe q nothing (k x)))
                                                      (refl nothing)
                                                      mx
@@ -90,7 +91,8 @@ mono-left-unit mgm-mono = ¶fst (¶snd (unmonoid mgm-mono))
 mono-right-unit : ∀ {ℓ} {mgm :{#} Magma ℓ} (mgm-mono :{#} IsMonoid mgm) {x : carrier mgm} → x ·⟨ mgm ⟩ (mono-unit mgm-mono) ≡ x
 mono-right-unit mgm-mono = ¶fst (¶snd (¶snd (unmonoid mgm-mono)))
 
-mono-assoc : ∀ {ℓ}  {mgm :{#} Magma ℓ} (mgm-mono :{#} IsMonoid mgm) {x y z : carrier mgm} → (x ·⟨ mgm ⟩ y) ·⟨ mgm ⟩ z ≡ x ·⟨ mgm ⟩ (y ·⟨ mgm ⟩ z)
+mono-assoc : ∀ {ℓ} {mgm :{#} Magma ℓ} (mgm-mono :{#} IsMonoid mgm) {x y z : carrier mgm}
+                    → (x ·⟨ mgm ⟩ y) ·⟨ mgm ⟩ z ≡ x ·⟨ mgm ⟩ (y ·⟨ mgm ⟩ z)
 mono-assoc mgm-mono = ¶fst (¶snd (¶snd (¶snd (unmonoid mgm-mono))))
 
 writer-premonad : ∀ {k} ℓ → (mgm : Magma k) → (m :{¶} carrier mgm) → Premonad (k ⊔ ℓ)
@@ -102,5 +104,6 @@ writer-premonad ℓ mgm m = premonad [ (λ X → X × (carrier mgm)) ,
 writer-monad : ∀ {k ℓ} {mgm : Magma k} (mgm-mono : IsMonoid mgm) → IsMonad (writer-premonad ℓ mgm (mono-unit mgm-mono))
 writer-monad mgm-mono = monad [¶ (λ {_ _ :{#} Set _} {x} {k} → cong (λ z → [ fst (k x) , z ]) (mono-left-unit mgm-mono)) ,
                               [¶ (λ {_ :{#} Set _} {x,m} → cong (λ z → [ fst x,m , z ]) (mono-right-unit mgm-mono)) ,
-                              [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ]) (mono-assoc mgm-mono)) ,
+                              [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ])
+                                                                                    (mono-assoc mgm-mono)) ,
                               tt ] ] ]

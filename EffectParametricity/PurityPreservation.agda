@@ -7,6 +7,10 @@ open import Monads.Examples
 open import Source
 open import Functors
 
+-- The modules in this file postulate their arguments instead of taking parameters because one of the monad laws
+-- must hold definitionally when using mweld (and therefore we need a rewrite rule).
+-- The dummy parameters make sure that the modalities of the postulated arguments are correctly enforced.
+
 module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     A :{#} Set ℓ
@@ -47,11 +51,16 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path : (i :{#} 𝕀) → type κ A
   final-path i = pull (return κ) i (fpath i)
 
-  -- Transitivity and the second equality are needed because pm-bridge i1 is not
-  -- exactly κ but κ with the last element of type ⊤ replaced with tt.
+  -- The reason why this proof consists of more than just (path-to-eq final-path) is that pm-bridge i1
+  -- is not exactly κ but κ with the last component (of type ⊤) replaced by tt (which is propositionally but not
+  -- definitionally equal to trivial κ).
   thm : return κ (f id-premonad a) ≡ f κ (return κ a)
   thm = path-to-eq final-path
-        • cong (λ x → f (premonad [ type κ , [¶ (λ {_ :{#} Set ℓ} → return κ) , [¶ (λ {_ _ :{#} Set ℓ} → bind κ) , x ] ] ]) (return κ a))
+        • cong (λ x → f (premonad [ type κ ,
+                                   [¶ (λ {_ :{#} Set ℓ} → return κ) ,
+                                   [¶ (λ {_ _ :{#} Set ℓ} → bind κ) ,
+                                   x ] ] ])
+                         (return κ a))
                (unique-⊤ tt (trivial κ))
 
 module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
@@ -96,8 +105,13 @@ module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path i = pull (return κ) i (fpath i)
 
   -- Theorem 1 from Voigtländer (2009)
+  -- Just as in the module Simplified, we have here that pm-bridge i1 is not exactly κ.
   thm : return κ (f id-premonad Fa) ≡ f κ (hom F (return κ) Fa)
   thm = cong (λ x → return κ (f id-premonad x)) (sym (funct-id F))
         • path-to-eq final-path
-        • cong (λ x → f (premonad [ type κ , [¶ (λ {_ :{#} Set _} → return κ) , [¶ (λ {_ _ :{#} Set _} → bind κ) , x ] ] ]) (hom F (return κ) Fa))
+        • cong (λ x → f (premonad [ type κ ,
+                                   [¶ (λ {_ :{#} Set _} → return κ) ,
+                                   [¶ (λ {_ _ :{#} Set _} → bind κ) ,
+                                   x ] ] ])
+                         (hom F (return κ) Fa))
                (unique-⊤ tt (trivial κ))

@@ -19,10 +19,10 @@ mrj-to-m Mrj Mrjmon = monad [¶ (λ {_ _ :{#} Set _} {_} {k :{¶} _} → (cong (
                                                                            • μ-law Mrjmon
                                                                            • cong (λ x → μ Mrj x) (funct-comp • funct-comp)) ,
                             tt ] ] ]
-                        where
-                          funct-comp : {X Y Z :{#} Set _} {f : X → Y} {g :{¶} Y → Z} {mx : obj (funct Mrj) X}
-                                          → hom (funct Mrj) g (hom (funct Mrj) f mx) ≡ hom (funct Mrj) (g ∘ f) mx
-                          funct-comp {X} {Y} {Z} {f} {g} {mx} = Composition.composition (funct Mrj) X Y Z f g mx
+                      where
+                        funct-comp : {X Y Z :{#} Set _} {f : X → Y} {g :{¶} Y → Z} {mx : obj (funct Mrj) X}
+                                        → hom (funct Mrj) g (hom (funct Mrj) f mx) ≡ hom (funct Mrj) (g ∘ f) mx
+                        funct-comp {X} {Y} {Z} {f} {g} {mx} = Composition.composition (funct Mrj) X Y Z f g mx
 
 m-to-pmrj : ∀ {ℓ} → {M : Premonad ℓ} → (Mmon : IsMonad M) → Premonad-rj ℓ
 m-to-pmrj {_} {M} Mmon = premonad-rj [ monad-funct Mmon ,
@@ -31,7 +31,11 @@ m-to-pmrj {_} {M} Mmon = premonad-rj [ monad-funct Mmon ,
                                      tt ] ] ]
 
 m-to-mrj : ∀ {ℓ} → {M : Premonad ℓ} → (Mmon : IsMonad M) → IsMonad-rj (m-to-pmrj Mmon)
-m-to-mrj {_} {M} Mmon = monad-rj [¶ (λ {_ :{#} Set _} {_} → assoc-law Mmon • (cong (bind M _) (funext λ x → sym (return-law1 Mmon))) • sym (assoc-law Mmon)) ,
+m-to-mrj {_} {M} Mmon = monad-rj [¶ (λ {_ :{#} Set _} {_} → assoc-law Mmon
+                                                             • (cong (bind M _) (funext λ x → sym (return-law1 Mmon)))
+                                                             • sym (assoc-law Mmon)) ,
                                  [¶ (λ {_ :{#} Set _} {_} → return-law1 Mmon) ,
-                                 [¶ (λ {_ :{#} Set _} {_} → assoc-law Mmon • (cong (bind M _) (funext λ x → return-law1 Mmon) • return-law2 Mmon) ) ,
+                                 [¶ (λ {_ :{#} Set _} {_} → assoc-law Mmon
+                                                             • (cong (bind M _) (funext λ x → return-law1 Mmon)
+                                                             • return-law2 Mmon) ) ,
                                  tt ] ] ]

@@ -75,6 +75,11 @@ module Composition {k ℓ}
   composition' : (hom F g) ∘ (hom F f) ≡ hom F (g ∘ f)
   composition' = path-to-eq final-path' • cong (λ h → h ∘ (hom F (g ∘ f))) (funct-id' F)
 
+-- The following module postulates its arguments because h ∘ f1 must be definitionally equal
+-- to f2 ∘ g in order for the result to hold and hence we need a rewrite rule (definitional
+-- equality is needed for using mweld in the definition of func-path).
+-- We add dummy parameters so that the modalities of the postulated arguments are correctly enforced.
+
 module SquareCommute {k ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     F :{#} Functor k ℓ
@@ -134,7 +139,9 @@ module SquareCommute {k ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path' i = (Fpullh-path i) ∘ (F-path i) ∘ (Fpushg-path i)
 
   square-commute' : hom F h ∘ hom F f1 ≡ hom F f2 ∘ hom F g
-  square-commute' = cong (λ x → hom F h ∘ hom F f1 ∘ x) (sym (funct-id' F)) • path-to-eq final-path' • cong (λ x → x ∘ hom F f2 ∘ hom F g) (funct-id' F)
+  square-commute' = cong (λ x → hom F h ∘ hom F f1 ∘ x) (sym (funct-id' F))
+                    • path-to-eq final-path'
+                    • cong (λ x → x ∘ hom F f2 ∘ hom F g) (funct-id' F)
 
 module NaturalTransformation {k ℓ : Level}
                              (F G :{#} Functor k ℓ)

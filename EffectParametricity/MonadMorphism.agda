@@ -7,6 +7,10 @@ open import Monads.Examples
 open import Target
 open import Functors
 
+-- The modules in this file postulate their arguments instead of taking parameters because the monad morphism laws
+-- must hold definitionally when using glue (and therefore we need a rewrite rule).
+-- The dummy parameters make sure that the modalities of the postulated arguments are correctly enforced.
+
 module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     A :{#} Set ℓ
@@ -56,11 +60,22 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path : (i :{#} 𝕀) → type κ2 A
   final-path i = pull (morphism h {A}) i (f-path i)
 
+  -- The reason why this proof consists of more than just (path-to-eq final-path) is that pm-bridge i0
+  -- is not exactly κ1 but κ1 with the last component (of type ⊤) replaced by tt (which is propositionally but not
+  -- definitionally equal to trivial κ1). Similarly pm-bridge i1 is not exactly κ2.
   thm : morphism h (f κ1 κ1a) ≡ f κ2 (morphism h κ1a)
-  thm = cong (λ x → morphism h (f (premonad [ type κ1 , [¶ (λ {_ :{#} Set ℓ} → return κ1) , [¶ (λ {_ _ :{#} Set ℓ} → bind κ1) , x ] ] ]) κ1a))
+  thm = cong (λ x → morphism h (f (premonad [ type κ1 ,
+                                             [¶ (λ {_ :{#} Set ℓ} → return κ1) ,
+                                             [¶ (λ {_ _ :{#} Set ℓ} → bind κ1) ,
+                                             x ] ] ])
+                                   κ1a))
              (unique-⊤ (trivial κ1) tt)
         • path-to-eq final-path
-        • cong (λ x → f (premonad [ type κ2 , [¶ (λ {_ :{#} Set ℓ} → return κ2) , [¶ (λ {_ _ :{#} Set ℓ} → bind κ2) , x ] ] ]) (morphism h κ1a))
+        • cong (λ x → f (premonad [ type κ2 ,
+                                   [¶ (λ {_ :{#} Set ℓ} → return κ2) ,
+                                   [¶ (λ {_ _ :{#} Set ℓ} → bind κ2) ,
+                                   x ] ] ])
+                         (morphism h κ1a))
                (unique-⊤ tt (trivial κ2))
 
 module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
@@ -114,10 +129,20 @@ module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path i = pull (morphism h) i (f-path i)
 
   -- Theorems 3 and 4 from Voigländer (2009)
+  -- Just as in the module Simplified, we have here that pm-bridge i0 is not exactly κ1
+  -- and pm-bridge i1 is not exactly κ2.
   thm : morphism h (f κ1 Fκ1a) ≡ f κ2 (hom F (morphism h) Fκ1a)
   thm = cong (λ x → morphism h (f κ1 x)) (sym (funct-id F))
-        • cong (λ x → morphism h (f (premonad [ type κ1 , [¶ (λ {_ :{#} Set _} → return κ1) , [¶ (λ {_ _ :{#} Set _} → bind κ1) , x ] ] ]) (hom F id Fκ1a)))
+        • cong (λ x → morphism h (f (premonad [ type κ1 ,
+                                               [¶ (λ {_ :{#} Set _} → return κ1) ,
+                                               [¶ (λ {_ _ :{#} Set _} → bind κ1) ,
+                                               x ] ] ])
+                                     (hom F id Fκ1a)))
                (unique-⊤ (trivial κ1) tt)
         • path-to-eq final-path
-        • cong (λ x → f (premonad [ type κ2 , [¶ (λ {_ :{#} Set _} → return κ2) , [¶ (λ {_ _ :{#} Set _} → bind κ2) , x ] ] ]) (hom F (morphism h) Fκ1a))
+        • cong (λ x → f (premonad [ type κ2 ,
+                                   [¶ (λ {_ :{#} Set _} → return κ2) ,
+                                   [¶ (λ {_ _ :{#} Set _} → bind κ2) ,
+                                   x ] ] ])
+                         (hom F (morphism h) Fκ1a))
                (unique-⊤ tt (trivial κ2))

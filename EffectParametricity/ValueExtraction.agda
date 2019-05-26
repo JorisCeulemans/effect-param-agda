@@ -7,6 +7,10 @@ open import Monads.Examples
 open import Target
 open import Functors
 
+-- The modules in this file postulate their arguments instead of taking parameters because the properties of p
+-- must hold definitionally when using glue (and therefore we need a rewrite rule).
+-- The dummy parameters make sure that the modalities of the postulated arguments are correctly enforced.
+
 module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     A :{#} Set ℓ
@@ -46,8 +50,15 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path : (i :{#} 𝕀) → A
   final-path i = pull p i (f-path i)
 
+  -- The reason why this proof consists of more than just (path-to-eq final-path) is that pm-bridge i0
+  -- is not exactly κ but κ with the last component (of type ⊤) replaced by tt (which is propositionally but not
+  -- definitionally equal to trivial κ).
   thm : p (f κ κa) ≡ f id-premonad (p κa)
-  thm = cong (λ x → p (f (premonad [ type κ , [¶ (λ {_ :{#} Set ℓ} → return κ) , [¶ (λ {_ _ :{#} Set ℓ} → bind κ) , x ] ] ]) κa) )
+  thm = cong (λ x → p (f (premonad [ type κ ,
+                                    [¶ (λ {_ :{#} Set ℓ} → return κ) ,
+                                    [¶ (λ {_ _ :{#} Set ℓ} → bind κ) ,
+                                    x ] ] ])
+                          κa))
              (unique-⊤ (trivial κ) tt)
         • path-to-eq final-path
 
@@ -96,8 +107,13 @@ module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   final-path i = pull p i (f-path i)
 
   -- Theorem 2 from Voigtländer (2009)
+  -- Just as in the module Simplified, we have here that pm-bridge i0 is not exactly κ.
   thm : p (f κ Fa) ≡ f id-premonad (hom F p Fa)
   thm = cong (λ x → p (f κ x)) (sym (funct-id F))
-        • cong (λ x → p (f (premonad [ type κ , [¶ (λ {_ :{#} Set _} → return κ) , [¶ (λ {_ _ :{#} Set _} → bind κ) , x ] ] ]) (hom F id Fa)))
+        • cong (λ x → p (f (premonad [ type κ ,
+                                      [¶ (λ {_ :{#} Set _} → return κ) ,
+                                      [¶ (λ {_ _ :{#} Set _} → bind κ) ,
+                                      x ] ] ])
+                            (hom F id Fa)))
                (unique-⊤ (trivial κ) tt)
         • path-to-eq final-path

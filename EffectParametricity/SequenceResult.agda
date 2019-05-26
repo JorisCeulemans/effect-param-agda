@@ -4,10 +4,13 @@ open import TypeSystem
 open import Functors
 open import Monads.Monads
 open import Monads.Examples
+open import Target
+
+-- The module in this file postulates its arguments instead of taking parameters because the monad morphism laws
+-- must hold definitionally when using glue (and therefore we need a rewrite rule).
+-- The dummy parameters make sure that the modalities of the postulated arguments are correctly enforced.
 
 module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
-  open import Target
-
   postulate
     F : Functor ℓ ℓ
     f : (μ :{#} Premonad ℓ) {X :{#} Set ℓ} → obj F (type μ X) → type μ (obj F X)
@@ -41,12 +44,12 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
   -- Bridge in Premonad from κ1 to κ2
   pm-bridge :{#} 𝕀 → Premonad ℓ
   pm-bridge i = premonad [ type-constr-bridge i ,
-                               [¶ (λ {X :{#} Set ℓ} x → push (morphism h {X}) i (return κ1 x) ) ,
-                               [¶ (λ {X Y :{#} Set ℓ} brx q → glue {φ = (i ≣ i0) ∨ (i ≣ i1)}
-                                                                  (λ { ((i ≣ i0) = p⊤) → bind κ1 brx q ;
-                                                                       ((i ≣ i1) = p⊤) → bind κ2 brx q })
-                                                                  (bind κ2 (pull (morphism h {X}) i brx) ((pull (morphism h {Y}) i) ∘ q)) ) ,
-                               tt ] ] ]
+                         [¶ (λ {X :{#} Set ℓ} x → push (morphism h {X}) i (return κ1 x) ) ,
+                         [¶ (λ {X Y :{#} Set ℓ} brx q → glue {φ = (i ≣ i0) ∨ (i ≣ i1)}
+                                                              (λ { ((i ≣ i0) = p⊤) → bind κ1 brx q ;
+                                                                   ((i ≣ i1) = p⊤) → bind κ2 brx q })
+                                                              (bind κ2 (pull (morphism h {X}) i brx) ((pull (morphism h {Y}) i) ∘ q))) ,
+                         tt ] ] ]
 
   -- Path from (hom F id Fκ1a) to (hom F h Fκ1a)
   hFκ1a-path : (i :{#} 𝕀) → obj F (type-constr-bridge i A)
@@ -68,11 +71,17 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
   almost-final-path : (i :{#} 𝕀) → type κ2 (obj F (g-bridge i))
   almost-final-path i = pull (morphism h) i (f-path i)
 
-  -- Homogeneous path from (fmap κ2 (hom F g) (h (f κ1 (hom F (fmap κ1 id) (hom F id Fκ1a))))) to (fmap κ2 (hom F id) (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a))))
+  -- Homogeneous path from (fmap κ2 (hom F g) (h (f κ1 (hom F (fmap κ1 id) (hom F id Fκ1a)))))
+  -- to (fmap κ2 (hom F id) (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a))))
   final-path : (i :{#} 𝕀) → type κ2 (obj F B)
   final-path i = (fmap κ2 (hom F (pull g i))) (almost-final-path i)
 
   -- Theorem 5 from Voigtländer (2009)
+  -- The reason why this proof consists of more than just (path-to-eq final-path) is that pm-bridge i0
+  -- is not exactly κ1 but κ1 with the last component (of type ⊤) replaced by tt (which is propositionally but not
+  -- definitionally equal to trivial κ1). Similarly pm-bridge i1 is not exactly κ2. Moreover, the endpoints of
+  -- final-path contain some extra applications of functors to the identity function, which we have to explicitly
+  -- eliminate to obtain the result.
   thm : fmap κ2 (hom F g) (morphism h (f κ1 Fκ1a)) ≡ f κ2 ((hom F (fmap κ2 g)) (hom F (morphism h) Fκ1a))
   thm = cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 z))) (sym (funct-id F))
         • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F z Fκ1a)))) (funext (λ _ → sym (return-law2 κ1mon)))

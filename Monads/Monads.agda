@@ -35,7 +35,7 @@ premonad-⊤-irrelevant : ∀ {ℓ} (M : Premonad ℓ) (x : ⊤)
 premonad-⊤-irrelevant M x = cong (λ y → premonad [ type M ,
                                                   [¶ (λ {X :{#} Set _} → return M {X}) ,
                                                   [¶ (λ {X Y :{#} Set _} → bind M {X} {Y}) , y ] ] ])
-                                 (unique-⊤ x (¶snd (¶snd (snd (unpremonad M)))))
+                                 (unique-⊤ x (trivial M))
 
 fmap : ∀ {ℓ} (M :{#} Premonad ℓ) {X Y :{#} Set ℓ} → (X → Y) → (type M X) → (type M Y)
 fmap M {X} {Y} f mx = bind M mx ((return M {Y}) ∘ f)
@@ -48,7 +48,8 @@ record IsMonad {ℓ : Level} (M : Premonad ℓ) : Set (lsuc ℓ) where
   field
     unmonad : ¶Σ[ return-law1 ∈ ({X Y :{#} Set ℓ} {x : X} {k :{¶} X → type M Y} → bind M (return M x) k ≡ k x) ] (
               ¶Σ[ return-law2 ∈ ({X :{#} Set ℓ} {fx : type M X} → bind M fx (return M) ≡ fx) ] (
-              ¶Σ[ assoc-law ∈ ({X Y Z :{#} Set ℓ} {fx : type M X} {k : X → type M Y} {q :{¶} Y → type M Z} → bind M (bind M fx k) q ≡ bind M fx (λ x → bind M (k x) q)) ]
+              ¶Σ[ assoc-law ∈ ({X Y Z :{#} Set ℓ} {fx : type M X} {k : X → type M Y} {q :{¶} Y → type M Z}
+                                    → bind M (bind M fx k) q ≡ bind M fx (λ x → bind M (k x) q)) ]
               ⊤ ))
 
 open IsMonad public
@@ -84,9 +85,10 @@ open MonadMorphism public
 morphism : ∀ {ℓ} {M1 M2 : Premonad ℓ} → MonadMorphism M1 M2 → {X :{#} Set ℓ} → type M1 X → type M2 X
 morphism {_} {M1} {M2} h = fst(unmonad-morphism h)
 
-morph-return-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{#} MonadMorphism M1 M2} {X :{#} Set ℓ} {x : X} → morphism h (return M1 x) ≡ return M2 x
+morph-return-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{#} MonadMorphism M1 M2} {X :{#} Set ℓ} {x : X}
+                         → morphism h (return M1 x) ≡ return M2 x
 morph-return-law {_} {M1} {M2} {h} = ¶fst(snd(unmonad-morphism h))
 
 morph-bind-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{#} MonadMorphism M1 M2} {X Y :{#} Set ℓ} {mx : type M1 X} {q : X → type M1 Y}
-                     → morphism h (bind M1 mx q) ≡ bind M2 (morphism h mx) ((morphism h) ∘ q)
+                       → morphism h (bind M1 mx q) ≡ bind M2 (morphism h mx) ((morphism h) ∘ q)
 morph-bind-law {_} {M1} {M2} {h} = ¶fst(¶snd(snd(unmonad-morphism h)))
