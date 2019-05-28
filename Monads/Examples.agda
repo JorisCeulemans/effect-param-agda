@@ -107,3 +107,9 @@ writer-monad mgm-mono = monad [¶ (λ {_ _ :{#} Set _} {x} {k} → cong (λ z �
                               [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ])
                                                                                     (mono-assoc mgm-mono)) ,
                               tt ] ] ]
+
+return-morphism : ∀ {ℓ} (M : Premonad ℓ) (Mmon : IsMonad M) → MonadMorphism (id-premonad {ℓ}) M
+return-morphism M Mmon = monad-morphism [ (λ {X :{#} Set _} → return M) ,
+                                        [¶ (λ {X :{#} Set _} {x} → refl (return M x)) ,
+                                        [¶ (λ {X Y :{#} Set _} {mx} {q :{¶} _} → sym (return-law1 Mmon)) ,
+                                        tt ] ] ]

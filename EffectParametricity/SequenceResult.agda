@@ -26,7 +26,7 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
   h-return-law : {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
   h-return-law = morph-return-law {h = h}
 
-  h-bind-law : {X Y :{#} Set ℓ} {mx : type κ1 X} {q : X → type κ1 Y}
+  h-bind-law : {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
                      → fst (unmonad-morphism h) (¶fst (¶snd (snd (unpremonad κ1))) mx q) ≡ bind κ2 (morphism h mx) ((morphism h) ∘ q)
   h-bind-law = morph-bind-law {h = h}
 
