@@ -14,7 +14,7 @@ open import Functors
 module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     A :{#} Set ℓ
-    f : (μ :{#} Premonad ℓ) → type μ A → type μ A
+    f : (M :{#} Premonad ℓ) → type M A → type M A
     κ : Premonad ℓ
     κa : type κ A
     p :{¶} {X :{#} Set ℓ} → type κ X → X
@@ -29,12 +29,12 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   p-bridge X = / p {X} /
 
   -- Bridge from (type κ) to id
-  type-constr-bridge :{#} 𝕀 → Set ℓ → Set ℓ
-  type-constr-bridge i X = p-bridge X i
+  type-op-bridge :{#} 𝕀 → Set ℓ → Set ℓ
+  type-op-bridge i X = p-bridge X i
 
   -- Bridge in Premonad from κ to id-monad
   pm-bridge :{#} 𝕀 → Premonad ℓ
-  pm-bridge i = premonad [ type-constr-bridge i ,
+  pm-bridge i = premonad [ type-op-bridge i ,
                          [¶ (λ {X :{#} Set ℓ} x → push (p {X}) i (return κ x)) ,
                          [¶ (λ {X Y :{#} Set ℓ} brx q → glue {φ = (i ≣ i0) ∨ (i ≣ i1)}
                                                               (λ { ((i ≣ i0) = p⊤) → bind κ brx q ;
@@ -66,7 +66,7 @@ module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     F : Functor ℓ ℓ
     A :{#} Set ℓ
-    f : (μ :{#} Premonad ℓ) → obj F (type μ A) → type μ A
+    f : (M :{#} Premonad ℓ) → obj F (type M A) → type M A
     κ : Premonad ℓ
     Fa : obj F (type κ A)
     p :{¶} {X :{#} Set ℓ} → type κ X → X
@@ -81,12 +81,12 @@ module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   p-bridge X = / p {X} /
 
   -- Bridge from (type κ) to (type id-premonad)
-  type-constr-bridge :{#} 𝕀 → Set ℓ → Set ℓ
-  type-constr-bridge i X = p-bridge X i
+  type-op-bridge :{#} 𝕀 → Set ℓ → Set ℓ
+  type-op-bridge i X = p-bridge X i
 
   -- Bridge in Premonad from κ to id-premonad
   pm-bridge :{#} 𝕀 → Premonad ℓ
-  pm-bridge i = premonad [ type-constr-bridge i ,
+  pm-bridge i = premonad [ type-op-bridge i ,
                          [¶ (λ {X :{#} Set ℓ} x → push (p {X}) i (return κ x)) ,
                          [¶ (λ {X Y :{#} Set ℓ} brx q → glue {φ = (i ≣ i0) ∨ (i ≣ i1)}
                                                               (λ { ((i ≣ i0) = p⊤) → bind κ brx q ;
@@ -95,11 +95,11 @@ module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
                          tt ] ] ]
 
   -- Path from (hom F id Fa) to (hom F p Fa)
-  Fa-path : (i :{#} 𝕀) → obj F (type-constr-bridge i A)
+  Fa-path : (i :{#} 𝕀) → obj F (type-op-bridge i A)
   Fa-path i = hom F (push p i) Fa
 
   -- Path from (f κ (hom F id Fa)) to (f id-premonad (hom F p Fa))
-  f-path : (i :{#} 𝕀) → type-constr-bridge i A
+  f-path : (i :{#} 𝕀) → type-op-bridge i A
   f-path i = f (pm-bridge i) (Fa-path i)
 
   -- Homogeneous path from (p (f κ (hom F id Fa))) to (f id-premonad (hom F p Fa))

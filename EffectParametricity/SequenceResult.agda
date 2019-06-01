@@ -13,7 +13,7 @@ open import Target
 module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     F : Functor ℓ ℓ
-    f : (μ :{#} Premonad ℓ) {X :{#} Set ℓ} → obj F (type μ X) → type μ (obj F X)
+    f : (M :{#} Premonad ℓ) {X :{#} Set ℓ} → obj F (type M X) → type M (obj F X)
     κ1 :{¶} Premonad ℓ
     κ1mon : IsMonad κ1
     κ2 :{¶} Premonad ℓ
@@ -38,12 +38,12 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
   h-bridge X = / morphism h {X} /
 
   -- Bridge from (type κ1) to (type κ2)
-  type-constr-bridge :{#} 𝕀 → Set ℓ → Set ℓ
-  type-constr-bridge i X = h-bridge X i
+  type-op-bridge :{#} 𝕀 → Set ℓ → Set ℓ
+  type-op-bridge i X = h-bridge X i
 
   -- Bridge in Premonad from κ1 to κ2
   pm-bridge :{#} 𝕀 → Premonad ℓ
-  pm-bridge i = premonad [ type-constr-bridge i ,
+  pm-bridge i = premonad [ type-op-bridge i ,
                          [¶ (λ {X :{#} Set ℓ} x → push (morphism h {X}) i (return κ1 x) ) ,
                          [¶ (λ {X Y :{#} Set ℓ} brx q → glue {φ = (i ≣ i0) ∨ (i ≣ i1)}
                                                               (λ { ((i ≣ i0) = p⊤) → bind κ1 brx q ;
@@ -52,7 +52,7 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
                          tt ] ] ]
 
   -- Path from (hom F id Fκ1a) to (hom F h Fκ1a)
-  hFκ1a-path : (i :{#} 𝕀) → obj F (type-constr-bridge i A)
+  hFκ1a-path : (i :{#} 𝕀) → obj F (type-op-bridge i A)
   hFκ1a-path i = hom F (push (morphism h) i) Fκ1a
 
   -- Bridge from A to B
@@ -60,11 +60,11 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
   g-bridge = / g /
 
   -- Path from (hom F (fmap κ1 id) (hom F id Fκ1a)) to (hom F (fmap κ2 g)) (hom F h Fκ1a)
-  ghFκ1a-path : (i :{#} 𝕀) → obj F (type-constr-bridge i (g-bridge i))
+  ghFκ1a-path : (i :{#} 𝕀) → obj F (type-op-bridge i (g-bridge i))
   ghFκ1a-path i = hom F (fmap (pm-bridge i) (push g i)) (hFκ1a-path i)
 
   -- Path from (f κ1 (hom F (fmap κ1 id) (hom F id Fκ1a))) to (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a)))
-  f-path : (i :{#} 𝕀) → type-constr-bridge i (obj F (g-bridge i))
+  f-path : (i :{#} 𝕀) → type-op-bridge i (obj F (g-bridge i))
   f-path i = f (pm-bridge i) (ghFκ1a-path i)
 
   -- Path from (h (f κ1 (hom F (fmap κ1 id) (hom F id Fκ1a)))) to (f κ2 ((hom F (fmap κ2 g)) (hom F h Fκ1a)))
