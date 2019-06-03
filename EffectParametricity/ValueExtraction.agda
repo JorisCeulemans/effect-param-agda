@@ -19,7 +19,7 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
     κa : type κ A
     p :{¶} {X :{#} Set ℓ} → type κ X → X
     p-return :{¶} {X :{#} Set ℓ} {x : X} → p (return κ x) ≡ x
-    p-bind :{¶} {X Y :{#} Set ℓ} {κx : type κ X} {q : X → type κ Y} → p (bind κ κx q) ≡ p (q (p κx))
+    p-bind :{¶} {X Y :{#} Set ℓ} {κx : type κ X} {q :{¶} X → type κ Y} → p (bind κ κx q) ≡ p (q (p κx))
 
   {-# REWRITE p-return #-}
   {-# REWRITE p-bind #-}
@@ -71,7 +71,7 @@ module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
     Fa : obj F (type κ A)
     p :{¶} {X :{#} Set ℓ} → type κ X → X
     p-return : {X :{#} Set ℓ} {x : X} → p (return κ x) ≡ x
-    p-bind : {X Y :{#} Set ℓ} {κb : type κ X} {q : X → type κ Y} → p (bind κ κb q) ≡ p (q (p κb))
+    p-bind : {X Y :{#} Set ℓ} {κb : type κ X} {q :{¶} X → type κ Y} → p (bind κ κb q) ≡ p (q (p κb))
 
   {-# REWRITE p-return #-}
   {-# REWRITE p-bind #-}

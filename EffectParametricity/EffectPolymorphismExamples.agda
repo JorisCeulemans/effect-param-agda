@@ -3,7 +3,7 @@ module EffectParametricity.EffectPolymorphismExamples where
 
 open import TypeSystem
 open import Monads.Monads
-
+{-
 sequence : ∀ {ℓ} (M :{#} Premonad ℓ) {X :{#} Set ℓ} → List (type M X) → type M (List X)
 sequence M l = list (return M []) (λ mx lt seq-lt → bind M mx (λ x → bind M seq-lt (λ ltx → return M (x :: ltx)))) l
 
@@ -16,3 +16,4 @@ f2 M l = bind M (sequence M l) (λ lnat → return M (sum lnat))
 
 f3 : (M :{#} Premonad lzero) → List (type M Nat) → type M Nat
 f3 M = (f2 M) ∘ reverse
+-}

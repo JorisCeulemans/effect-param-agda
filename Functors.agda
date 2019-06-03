@@ -8,7 +8,7 @@ record Functor (k ℓ : Level) : Set (lsuc (k ⊔ ℓ)) where
   constructor functor
   field
     unfunctor : Σ[ obj ∈ (Set k → Set ℓ) ] (
-                ¶Σ[ hom ∈ ({X Y :{#} Set k} → (X → Y) → obj X → obj Y) ] (
+                ¶Σ[ hom ∈ ({X Y :{#} Set k} → (f :{¶} X → Y) → obj X → obj Y) ] (
                 ¶Σ[ funct-id ∈ ({X :{#} Set k} {x : obj X} → hom id x ≡ x) ] (
                 ⊤ )))
 
@@ -17,7 +17,7 @@ open Functor
 obj : ∀ {k ℓ} → Functor k ℓ → Set k → Set ℓ
 obj F = fst(unfunctor F)
 
-hom : ∀ {k ℓ} (F :{#} Functor k ℓ) → {X Y :{#} Set k} → (X → Y) → (obj F X) → (obj F Y)
+hom : ∀ {k ℓ} (F :{#} Functor k ℓ) → {X Y :{#} Set k} → (f :{¶} X → Y) → (obj F X) → (obj F Y)
 hom F = ¶fst(snd(unfunctor F))
 
 funct-id : ∀ {k ℓ} (F :{#} Functor k ℓ) → {X :{#} Set k} → {x : obj F X} → hom F id x ≡ x
@@ -25,17 +25,17 @@ funct-id F = ¶fst(¶snd(snd(unfunctor F)))
 
 funct-id' : ∀ {k ℓ} (F :{#} Functor k ℓ) {X :{#} Set k} → hom F {X} id ≡ id
 funct-id' F = funext (λ x → funct-id F)
-
+{-
 _∘funct_ : ∀ {ℓ1 ℓ2 ℓ3} → Functor ℓ2 ℓ3 → Functor ℓ1 ℓ2 → Functor ℓ1 ℓ3
 G ∘funct F = functor [ obj G ∘ obj F ,
                      [¶ (λ {X Y :{#} Set _} f → hom G (hom F f)) ,
                      [¶ (λ {X :{#} Set _} {x} → cong (λ h → hom G h x) (funct-id' F) • funct-id G) ,
                      tt ] ] ]
-
+-}
 module Composition {k ℓ}
                    (F :{#} Functor k ℓ)
                    (A B C :{#} Set k)
-                   (f : A → B)
+                   (f :{¶} A → B)
                    (g :{¶} B → C)
                    where
 
@@ -44,11 +44,11 @@ module Composition {k ℓ}
   g-bridge = / g /
 
   -- Path from b : B to g(b) : C
-  g-path : B → (i :{#} 𝕀) → g-bridge i
+  g-path :{¶} B → (i :{#} 𝕀) → g-bridge i
   g-path b i = push g i b
 
   -- Path from f a : B to (g ∘ f) a : C
-  func-path : (i :{#} 𝕀) → A → g-bridge i
+  func-path :{¶} (i :{#} 𝕀) → A → g-bridge i
   func-path i a = g-path (f a) i
 
   -- Path from F f : F A → F B to F (g ∘ f) : F A → F C
@@ -84,8 +84,8 @@ module SquareCommute {k ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     F :{#} Functor k ℓ
     A B C D :{#} Set k
-    f1 : A → B
-    f2 : C → D
+    f1 :{¶} A → B
+    f2 :{¶} C → D
     g :{¶} A → C
     h :{¶} B → D
     comm : (a : A) → h (f1 a) ≡ f2 (g a)
@@ -101,11 +101,11 @@ module SquareCommute {k ℓ} {iddummy : Set} {pardummy :{#} Set} where
   h-bridge = / h /
 
   -- Path from b : B to h b : D
-  h-path : B → (i :{#} 𝕀) → h-bridge i
+  h-path :{¶} B → (i :{#} 𝕀) → h-bridge i
   h-path b i = push h i b
 
   -- Path from f1 : A → B to f2 : C → D
-  func-path : (i :{#} 𝕀) → g-bridge i → h-bridge i
+  func-path :{¶} (i :{#} 𝕀) → g-bridge i → h-bridge i
   func-path i x = mweld {φ = (i ≣ i0) ∨ (i ≣ i1)}
                         {C = λ _ → h-bridge i}
                         (λ (a :{#} A) → h-path (f1 a) i)
@@ -180,7 +180,7 @@ module NaturalTransformation {k ℓ : Level}
 module Examples where
   id-functor : ∀ {ℓ} → Functor ℓ ℓ
   id-functor {ℓ} = functor [ id ,
-                           [¶ (λ {X Y :{#} Set ℓ} f → f) ,
+                           [¶ (λ {X Y :{#} Set ℓ} (f :{¶} _) → f) ,
                            [¶ (λ {X :{#} Set ℓ} {x} → refl x) ,
                            tt ] ] ]
 
@@ -192,13 +192,13 @@ module Examples where
 
   list-functor : ∀ {ℓ} → Functor ℓ ℓ
   list-functor {ℓ} = functor [ List ,
-                             [¶ (λ {X Y :{#} Set ℓ} f → map f) ,
+                             [¶ (λ {X Y :{#} Set ℓ} (f :{¶} _) → map f) ,
                              [¶ (λ {X :{#} Set ℓ} {xs : List X} → map-id) ,
                              tt ] ] ]
 
   hom-functor : ∀ {k ℓ} (X : Set ℓ) → Functor k (k ⊔ ℓ)
   hom-functor {k} {ℓ} X = functor [ (λ Y → (X → Y)) ,
-                                  [¶ (λ {Y₁ Y₂ :{#} Set k} f g → f ∘ g) ,
+                                  [¶ (λ {Y₁ Y₂ :{#} Set k} (f :{¶} _) g → f ∘ g) ,
                                   [¶ (λ {Y :{#} Set k} {g : X → Y} → refl g) ,
                                   tt ] ] ]
 
@@ -207,7 +207,7 @@ module Examples where
 
   maybe-functor : ∀ {ℓ} → Functor ℓ ℓ
   maybe-functor {ℓ} = functor [ Maybe ,
-                              [¶ (λ {X Y :{#} Set ℓ} f → mb-map f) ,
+                              [¶ (λ {X Y :{#} Set ℓ} (f :{¶} _) → mb-map f) ,
                               [¶ (λ {X :{#} Set ℓ} {mx : Maybe X} → mb-map-id) ,
                               tt ] ] ]
 

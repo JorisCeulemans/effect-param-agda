@@ -23,11 +23,11 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
     g :{¶} A → B
     Fκ1a : obj F (type κ1 A)
 
-  h-return-law : {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
+  h-return-law : {X :{#} Set ℓ} {x : X} → ¶fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
   h-return-law = morph-return-law {h = h}
 
   h-bind-law : {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
-                     → fst (unmonad-morphism h) (¶fst (¶snd (snd (unpremonad κ1))) mx q) ≡ bind κ2 (morphism h mx) ((morphism h) ∘ q)
+                     → ¶fst (unmonad-morphism h) (¶fst (¶snd (snd (unpremonad κ1))) mx q) ≡ bind κ2 (morphism h mx) ((morphism h) ∘ q)
   h-bind-law = morph-bind-law {h = h}
 
   {-# REWRITE h-return-law #-}
@@ -84,7 +84,7 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
   -- eliminate to obtain the result.
   thm : fmap κ2 (hom F g) (morphism h (f κ1 Fκ1a)) ≡ f κ2 ((hom F (fmap κ2 g)) (hom F (morphism h) Fκ1a))
   thm = cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 z))) (sym (funct-id F))
-        • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F z Fκ1a)))) (funext (λ _ → sym (return-law2 κ1mon)))
+        • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F {!z!} Fκ1a)))) (funext (λ _ → sym (return-law2 κ1mon)))
         • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F (fmap κ1 id) z)))) (sym (funct-id F))
         • cong (λ z → fmap κ2 (hom F g) (morphism h (f (premonad [ type κ1 ,
                                                                   [¶ (λ {_ :{#} Set _} → return κ1) ,
@@ -99,5 +99,5 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
                                                         z ] ] ])
                                               ((hom F (fmap κ2 g)) (hom F (morphism h) Fκ1a)))))
                (unique-⊤ tt (trivial κ2))
-        • cong (λ z → fmap κ2 z (f κ2 (hom F (fmap κ2 g) (hom F (morphism h) Fκ1a)))) (funct-id' F)
+        • cong (λ z → fmap κ2 {!z!} (f κ2 (hom F (fmap κ2 g) (hom F (morphism h) Fκ1a)))) (funct-id' F)
         • return-law2 κ2mon

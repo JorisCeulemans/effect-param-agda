@@ -25,11 +25,11 @@ funct M = fst (unpremonad-rj M)
 
 η-nat : ∀ {ℓ} (M :{#} Premonad-rj ℓ) → {X Y :{#} Set ℓ} {f :{¶} X → Y} {x : X} → hom (funct M) f (η M x) ≡ η M (f x)
 η-nat M = NaturalTransformation.naturality (Examples.id-functor) (funct M) (λ (X :{#} Set _) → η M) _ _ _ _
-
+{-
 μ-nat : ∀ {ℓ} (M :{#} Premonad-rj ℓ) → {X Y :{#} Set ℓ} {f :{¶} X → Y} {f2x : obj (funct M) (obj (funct M) X)}
               → hom (funct M) f (μ M f2x) ≡ μ M (hom (funct M) (hom (funct M) f) f2x)
 μ-nat M = NaturalTransformation.naturality (funct M ∘funct funct M) (funct M) (λ (X :{#} Set _) → μ M) _ _ _ _
-
+-}
 record IsMonad-rj {ℓ : Level} (M : Premonad-rj ℓ) : Set (lsuc ℓ) where
   constructor monad-rj
   field

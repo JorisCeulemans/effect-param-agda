@@ -7,19 +7,19 @@ open import Monads.Monads
 id-premonad : ∀ {ℓ} → Premonad ℓ
 id-premonad = premonad [ id ,
                        [¶ (λ x → x) ,
-                       [¶ (λ x k → k x) ,
+                       [¶ (λ x (k :{¶} _) → k x) ,
                        tt ] ] ]           
 
 id-monad : ∀ {ℓ} → IsMonad id-premonad
 id-monad {ℓ} = monad [¶ (λ {_ _ :{#} Set ℓ} {_} {_ :{¶} _} → refl _) ,
                      [¶ (λ {_ :{#} Set ℓ} {_} → refl _) ,
-                     [¶ (λ {_ _ _ :{#} Set ℓ} {_} {_} {_ :{¶} _} → refl _) ,
+                     [¶ (λ {_ _ _ :{#} Set ℓ} {_} {_ :{¶} _} {_ :{¶} _} → refl _) ,
                      tt ] ] ]
 
 maybe-premonad : ∀ {ℓ} → Premonad ℓ
 maybe-premonad {ℓ} = premonad [ Maybe ,
                               [¶ (λ {X :{#} Set ℓ} x → just x) ,
-                              [¶ (λ {X Y :{#} Set ℓ} mx k → maybe k nothing mx) ,
+                              [¶ (λ {X Y :{#} Set ℓ} mx (k :{¶} _) → maybe k nothing mx) ,
                               tt ] ] ]
 
 maybe-return-law2 : ∀ {ℓ} {X :{#} Set ℓ} {mx : Maybe X} → maybe just nothing mx ≡ mx
@@ -36,19 +36,19 @@ maybe-assoc-law {ℓ} {X} {Y} {Z} {mx} {k} {q} = maybe {B = λ mx'' → maybe q 
 maybe-monad : ∀ {ℓ} → IsMonad maybe-premonad
 maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {_} {_ :{¶} _} → refl _ ) ,
                         [¶ (λ {X :{#} Set ℓ} {mx} → maybe-return-law2) ,
-                        [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k} {q :{¶} _} → maybe-assoc-law {mx = mx}) ,
+                        [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k :{¶} _} {q :{¶} _} → maybe-assoc-law {mx = mx}) ,
                         tt ] ] ]
 
 state-premonad : ∀ {k} ℓ → (S : Set k) → Premonad (k ⊔ ℓ)
 state-premonad ℓ S = premonad [ (λ X → (S → X × S)) ,
                               [¶ (λ {X :{#} Set _} x s → [ x , s ]) ,
-                              [¶ (λ {X Y :{#} Set _} sx k s → k (fst (sx s)) (snd (sx s))) ,
+                              [¶ (λ {X Y :{#} Set _} sx (k :{¶} _) s → k (fst (sx s)) (snd (sx s))) ,
                               tt ] ] ]
 
 state-monad : ∀ {k ℓ} (S : Set k) → IsMonad (state-premonad ℓ S)
 state-monad S = monad [¶ (λ {X Y :{#} Set _} {x} {k :{¶} _} → refl (k x)) ,
                       [¶ (λ {X :{#} Set _} {sx} → refl sx) ,
-                      [¶ (λ {X Y Z :{#} Set _} {sx} {k} {q :{¶} _} → refl _) ,
+                      [¶ (λ {X Y Z :{#} Set _} {sx} {k :{¶} _} {q :{¶} _} → refl _) ,
                       tt ] ] ]
 
 record Magma (ℓ : Level) : Set (lsuc ℓ) where
@@ -98,18 +98,18 @@ mono-assoc mgm-mono = ¶fst (¶snd (¶snd (¶snd (unmonoid mgm-mono))))
 writer-premonad : ∀ {k} ℓ → (mgm : Magma k) → (m :{¶} carrier mgm) → Premonad (k ⊔ ℓ)
 writer-premonad ℓ mgm m = premonad [ (λ X → X × (carrier mgm)) ,
                                    [¶ (λ {X :{#} Set _} x → [ x , m ]) ,
-                                   [¶ (λ {X Y :{#} Set _} x,n k → [ fst (k (fst x,n)) , snd x,n ·⟨ mgm ⟩ snd (k (fst x,n)) ]) ,
+                                   [¶ (λ {X Y :{#} Set _} x,n (k :{¶} _) → [ fst (k (fst x,n)) , snd x,n ·⟨ mgm ⟩ snd (k (fst x,n)) ]) ,
                                    tt ] ] ]
 
 writer-monad : ∀ {k ℓ} {mgm : Magma k} (mgm-mono : IsMonoid mgm) → IsMonad (writer-premonad ℓ mgm (mono-unit mgm-mono))
-writer-monad mgm-mono = monad [¶ (λ {_ _ :{#} Set _} {x} {k} → cong (λ z → [ fst (k x) , z ]) (mono-left-unit mgm-mono)) ,
+writer-monad mgm-mono = monad [¶ (λ {_ _ :{#} Set _} {x} {k :{¶} _} → cong (λ z → [ fst (k x) , z ]) (mono-left-unit mgm-mono)) ,
                               [¶ (λ {_ :{#} Set _} {x,m} → cong (λ z → [ fst x,m , z ]) (mono-right-unit mgm-mono)) ,
-                              [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ])
+                              [¶ (λ {_ _ _ :{#} Set _} {x,m} {k :{¶} _} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ])
                                                                                     (mono-assoc mgm-mono)) ,
                               tt ] ] ]
 
 return-morphism : ∀ {ℓ} (M : Premonad ℓ) (Mmon : IsMonad M) → MonadMorphism (id-premonad {ℓ}) M
-return-morphism M Mmon = monad-morphism [ (λ {X :{#} Set _} → return M) ,
+return-morphism M Mmon = monad-morphism [¶ (λ {X :{#} Set _} → return M) ,
                                         [¶ (λ {X :{#} Set _} {x} → refl (return M x)) ,
                                         [¶ (λ {X Y :{#} Set _} {mx} {q :{¶} _} → sym (return-law1 Mmon)) ,
                                         tt ] ] ]
