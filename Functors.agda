@@ -33,7 +33,7 @@ G ∘funct F = functor [ obj G ∘ obj F ,
                      tt ] ] ]
 
 module Composition {k ℓ}
-                   (F : Functor k ℓ)
+                   (F :{#} Functor k ℓ)
                    (A B C :{#} Set k)
                    (f : A → B)
                    (g :{¶} B → C)

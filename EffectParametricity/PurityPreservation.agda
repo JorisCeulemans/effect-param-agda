@@ -65,7 +65,7 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
 
 module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
-    F : Functor ℓ ℓ
+    F :{#} Functor ℓ ℓ
     A :{#} Set ℓ
     f : (M :{#} Premonad ℓ) → obj F (type M A) → type M A
     κ : Premonad ℓ

@@ -18,8 +18,8 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
     κ : Premonad ℓ
     κa : type κ A
     p :{¶} {X :{#} Set ℓ} → type κ X → X
-    p-return : {X :{#} Set ℓ} {x : X} → p (return κ x) ≡ x
-    p-bind : {X Y :{#} Set ℓ} {κx : type κ X} {q : X → type κ Y} → p (bind κ κx q) ≡ p (q (p κx))
+    p-return :{¶} {X :{#} Set ℓ} {x : X} → p (return κ x) ≡ x
+    p-bind :{¶} {X Y :{#} Set ℓ} {κx : type κ X} {q : X → type κ Y} → p (bind κ κx q) ≡ p (q (p κx))
 
   {-# REWRITE p-return #-}
   {-# REWRITE p-bind #-}
@@ -64,7 +64,7 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
 
 module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
-    F : Functor ℓ ℓ
+    F :{#} Functor ℓ ℓ
     A :{#} Set ℓ
     f : (M :{#} Premonad ℓ) → obj F (type M A) → type M A
     κ : Premonad ℓ
