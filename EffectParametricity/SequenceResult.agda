@@ -10,9 +10,13 @@ open import Target
 -- must hold definitionally when using glue (and therefore we need a rewrite rule).
 -- The dummy parameters make sure that the modalities of the postulated arguments are correctly enforced.
 
+-- The premonads κ1 and κ2 could also be postulated with a continuous modality if we defined h as a polymorphic map
+-- of type {X :{#} Set ℓ} → type κ1 X → type κ2 X and additionally postulated the laws that turn h into a
+-- monad morphism.
+
 module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
-    F : Functor ℓ ℓ
+    F :{#} Functor ℓ ℓ
     f : (M :{#} Premonad ℓ) {X :{#} Set ℓ} → obj F (type M X) → type M (obj F X)
     κ1 :{¶} Premonad ℓ
     κ1mon : IsMonad κ1
@@ -23,10 +27,10 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
     g :{¶} A → B
     Fκ1a : obj F (type κ1 A)
 
-  h-return-law : {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
+  h-return-law :{¶} {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
   h-return-law = morph-return-law {h = h}
 
-  h-bind-law : {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
+  h-bind-law :{¶} {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
                      → fst (unmonad-morphism h) (¶fst (¶snd (snd (unpremonad κ1))) mx q) ≡ bind κ2 (morphism h mx) ((morphism h) ∘ q)
   h-bind-law = morph-bind-law {h = h}
 
@@ -82,7 +86,7 @@ module EffectParametricity.SequenceResult {ℓ} {iddummy : Set} {pardummy :{#} S
   -- definitionally equal to trivial κ1). Similarly pm-bridge i1 is not exactly κ2. Moreover, the endpoints of
   -- final-path contain some extra applications of functors to the identity function, which we have to explicitly
   -- eliminate to obtain the result.
-  thm : fmap κ2 (hom F g) (morphism h (f κ1 Fκ1a)) ≡ f κ2 ((hom F (fmap κ2 g)) (hom F (morphism h) Fκ1a))
+  thm : fmap κ2 (hom F g) (morphism h (f κ1 Fκ1a)) ≡ f κ2 (hom F (fmap κ2 g) (hom F (morphism h) Fκ1a))
   thm = cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 z))) (sym (funct-id F))
         • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F z Fκ1a)))) (funext (λ _ → sym (return-law2 κ1mon)))
         • cong (λ z → fmap κ2 (hom F g) (morphism h (f κ1 (hom F (fmap κ1 id) z)))) (sym (funct-id F))

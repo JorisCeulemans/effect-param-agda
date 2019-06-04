@@ -11,6 +11,11 @@ open import Functors
 -- must hold definitionally when using glue (and therefore we need a rewrite rule).
 -- The dummy parameters make sure that the modalities of the postulated arguments are correctly enforced.
 
+-- The pointwise dependence of these results on the premonads κ1 and κ2 is explained by the fact that the morphism
+-- function defined in Monads.Monads takes its two premonads as continuous parameters and hence they must be pointwise
+-- if we want to use morphism inside /_/. This would not be needed if instead of the assumptions below, we postulated that
+-- h : {X : {#} Set ℓ} → type κ1 X → type κ2 X and additionally postulated the laws making h into a monad morphism.
+
 module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
     A :{#} Set ℓ
@@ -20,10 +25,10 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
     h :{¶} MonadMorphism κ1 κ2
     κ1a : type κ1 A
 
-  h-return-law : {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
+  h-return-law :{¶} {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
   h-return-law = morph-return-law {h = h}
 
-  h-bind-law : {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
+  h-bind-law :{¶} {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
                      → fst (unmonad-morphism h) (¶fst (¶snd (snd (unpremonad κ1))) mx q) ≡ bind κ2 (morphism h mx) ((morphism h) ∘ q)
   h-bind-law = morph-bind-law {h = h}
 
@@ -80,18 +85,18 @@ module Simplified {ℓ} {iddummy : Set} {pardummy :{#} Set} where
 
 module FullResult {ℓ} {iddummy : Set} {pardummy :{#} Set} where
   postulate
-    F : Functor ℓ ℓ
-    A : Set ℓ
+    F :{#} Functor ℓ ℓ
+    A :{#} Set ℓ
     f : (M :{#} Premonad ℓ) → obj F (type M A) → type M A
     κ1 :{¶} Premonad ℓ
     κ2 :{¶} Premonad ℓ
     h :{¶} MonadMorphism κ1 κ2
     Fκ1a : obj F (type κ1 A)
 
-  h-return-law : {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
+  h-return-law :{¶} {X :{#} Set ℓ} {x : X} → fst (unmonad-morphism h) (¶fst (snd (unpremonad κ1)) x) ≡ return κ2 x
   h-return-law = morph-return-law {h = h}
 
-  h-bind-law : {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
+  h-bind-law :{¶} {X Y :{#} Set ℓ} {mx : type κ1 X} {q :{¶} X → type κ1 Y}
                      → fst (unmonad-morphism h) (¶fst (¶snd (snd (unpremonad κ1))) mx q) ≡ bind κ2 (morphism h mx) ((morphism h) ∘ q)
   h-bind-law = morph-bind-law {h = h}
 
