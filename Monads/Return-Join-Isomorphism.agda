@@ -12,10 +12,16 @@ pmrj-to-pm Mrj = premonad [ obj (funct Mrj) ,
                           [¶ ((λ mx k → (μ Mrj) (hom (funct Mrj) k mx))) ,
                           tt ] ] ]
 
+-- The function mrj-to-m defined below does not typecheck because η-nat and μ-nat are pointwise in their (implicit)
+-- function arguments and hence they cannot be instantiated with k or q. A solution would be to make some laws in
+-- IsMonad depend pointwise on functions, but this causes problems with the rewrite rules in some effect parametricity
+-- results (see https://github.com/agda/agda/issues/3839).
+
+{-
 mrj-to-m : ∀ {ℓ} → (Mrj : Premonad-rj ℓ) → (Mrjmon : IsMonad-rj Mrj) → IsMonad (pmrj-to-pm Mrj)
-mrj-to-m Mrj Mrjmon = monad [¶ (λ {_ _ :{#} Set _} {_} {k :{¶} _} → (cong (λ x → μ Mrj x) (η-nat Mrj) • η-law1 Mrjmon)) ,
+mrj-to-m Mrj Mrjmon = monad [¶ (λ {_ _ :{#} Set _} {_} {k} → (cong (λ x → μ Mrj x) ({!η-nat Mrj!}) • η-law1 Mrjmon)) ,
                             [¶ (λ {_ :{#} Set _} {_} → η-law2 Mrjmon) ,
-                            [¶ (λ {_ _ _ :{#} Set _} {_} {k} {q :{¶} _} → cong (λ x → μ Mrj x) (μ-nat Mrj)
+                            [¶ (λ {_ _ _ :{#} Set _} {_} {k} {q} → cong (λ x → μ Mrj x) ({!μ-nat Mrj!})
                                                                            • μ-law Mrjmon
                                                                            • cong (λ x → μ Mrj x) (funct-comp • funct-comp)) ,
                             tt ] ] ]
@@ -23,7 +29,7 @@ mrj-to-m Mrj Mrjmon = monad [¶ (λ {_ _ :{#} Set _} {_} {k :{¶} _} → (cong (
                         funct-comp : {X Y Z :{#} Set _} {f : X → Y} {g :{¶} Y → Z} {mx : obj (funct Mrj) X}
                                         → hom (funct Mrj) g (hom (funct Mrj) f mx) ≡ hom (funct Mrj) (g ∘ f) mx
                         funct-comp {X} {Y} {Z} {f} {g} {mx} = Composition.composition (funct Mrj) X Y Z f g mx
-
+-}
 m-to-pmrj : ∀ {ℓ} → {M : Premonad ℓ} → (Mmon : IsMonad M) → Premonad-rj ℓ
 m-to-pmrj {_} {M} Mmon = premonad-rj [ monad-funct Mmon ,
                                      [¶ (λ {_ :{#} Set _} → return M) ,

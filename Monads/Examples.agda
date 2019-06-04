@@ -11,9 +11,9 @@ id-premonad = premonad [ id ,
                        tt ] ] ]           
 
 id-monad : ∀ {ℓ} → IsMonad id-premonad
-id-monad {ℓ} = monad [¶ (λ {_ _ :{#} Set ℓ} {_} {_ :{¶} _} → refl _) ,
+id-monad {ℓ} = monad [¶ (λ {_ _ :{#} Set ℓ} {_} {_} → refl _) ,
                      [¶ (λ {_ :{#} Set ℓ} {_} → refl _) ,
-                     [¶ (λ {_ _ _ :{#} Set ℓ} {_} {_} {_ :{¶} _} → refl _) ,
+                     [¶ (λ {_ _ _ :{#} Set ℓ} {_} {_} {_} → refl _) ,
                      tt ] ] ]
 
 maybe-premonad : ∀ {ℓ} → Premonad ℓ
@@ -34,9 +34,9 @@ maybe-assoc-law {ℓ} {X} {Y} {Z} {mx} {k} {q} = maybe {B = λ mx'' → maybe q 
                                                      mx
 
 maybe-monad : ∀ {ℓ} → IsMonad maybe-premonad
-maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {_} {_ :{¶} _} → refl _ ) ,
+maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {_} {_} → refl _ ) ,
                         [¶ (λ {X :{#} Set ℓ} {mx} → maybe-return-law2) ,
-                        [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k} {q :{¶} _} → maybe-assoc-law {mx = mx}) ,
+                        [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k} {q} → maybe-assoc-law {mx = mx}) ,
                         tt ] ] ]
 
 state-premonad : ∀ {k} ℓ → (S : Set k) → Premonad (k ⊔ ℓ)
@@ -46,9 +46,9 @@ state-premonad ℓ S = premonad [ (λ X → (S → X × S)) ,
                               tt ] ] ]
 
 state-monad : ∀ {k ℓ} (S : Set k) → IsMonad (state-premonad ℓ S)
-state-monad S = monad [¶ (λ {X Y :{#} Set _} {x} {k :{¶} _} → refl (k x)) ,
+state-monad S = monad [¶ (λ {X Y :{#} Set _} {x} {k} → refl (k x)) ,
                       [¶ (λ {X :{#} Set _} {sx} → refl sx) ,
-                      [¶ (λ {X Y Z :{#} Set _} {sx} {k} {q :{¶} _} → refl _) ,
+                      [¶ (λ {X Y Z :{#} Set _} {sx} {k} {q} → refl _) ,
                       tt ] ] ]
 
 record Magma (ℓ : Level) : Set (lsuc ℓ) where
@@ -104,12 +104,21 @@ writer-premonad ℓ mgm m = premonad [ (λ X → X × (carrier mgm)) ,
 writer-monad : ∀ {k ℓ} {mgm : Magma k} (mgm-mono : IsMonoid mgm) → IsMonad (writer-premonad ℓ mgm (mono-unit mgm-mono))
 writer-monad mgm-mono = monad [¶ (λ {_ _ :{#} Set _} {x} {k} → cong (λ z → [ fst (k x) , z ]) (mono-left-unit mgm-mono)) ,
                               [¶ (λ {_ :{#} Set _} {x,m} → cong (λ z → [ fst x,m , z ]) (mono-right-unit mgm-mono)) ,
-                              [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q :{¶} _} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ])
-                                                                                    (mono-assoc mgm-mono)) ,
+                              [¶ (λ {_ _ _ :{#} Set _} {x,m} {k} {q} → cong (λ z → [ (fst (q (fst (k (fst x,m))))) , z ])
+                                                                             (mono-assoc mgm-mono)) ,
                               tt ] ] ]
+
+wr-monad-monoid : ∀ {k ℓ} {X : Set (k ⊔ ℓ)} {x :{¶} X} {mgm : Magma k} {m :{¶} carrier mgm}
+                                            → IsMonad (writer-premonad ℓ mgm m) → IsMonoid mgm
+wr-monad-monoid {_} {_} {X} {x} {mgm} {m} wr-mon = monoid [¶ m ,
+                                                          [¶ (λ {n} → cong snd (return-law1 wr-mon {X = X} {x = x} {k = λ z → [ z , n ]})) ,
+                                                          [¶ (λ {n} → cong snd (return-law2 wr-mon {X = X} {fx = [ x , n ]})) ,
+                                                          [¶ (λ {n1 n2 n3} → cong snd (assoc-law wr-mon {X = X} {Y = X} {Z = X} {fx = [ x , n1 ]}
+                                                                                                  {k = λ z → [ z , n2 ]} {q = λ z → [ z , n3 ]})) ,
+                                                          tt ] ] ] ]
 
 return-morphism : ∀ {ℓ} (M : Premonad ℓ) (Mmon : IsMonad M) → MonadMorphism (id-premonad {ℓ}) M
 return-morphism M Mmon = monad-morphism [ (λ {X :{#} Set _} → return M) ,
                                         [¶ (λ {X :{#} Set _} {x} → refl (return M x)) ,
-                                        [¶ (λ {X Y :{#} Set _} {mx} {q :{¶} _} → sym (return-law1 Mmon)) ,
+                                        [¶ (λ {X Y :{#} Set _} {mx} {q} → sym (return-law1 Mmon)) ,
                                         tt ] ] ]

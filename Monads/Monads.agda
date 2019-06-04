@@ -46,22 +46,22 @@ join M mmx = bind M mmx id
 record IsMonad {ℓ : Level} (M : Premonad ℓ) : Set (lsuc ℓ) where
   constructor monad
   field
-    unmonad : ¶Σ[ return-law1 ∈ ({X Y :{#} Set ℓ} {x : X} {k :{¶} X → type M Y} → bind M (return M x) k ≡ k x) ] (
+    unmonad : ¶Σ[ return-law1 ∈ ({X Y :{#} Set ℓ} {x : X} {k : X → type M Y} → bind M (return M x) k ≡ k x) ] (
               ¶Σ[ return-law2 ∈ ({X :{#} Set ℓ} {fx : type M X} → bind M fx (return M) ≡ fx) ] (
-              ¶Σ[ assoc-law ∈ ({X Y Z :{#} Set ℓ} {fx : type M X} {k : X → type M Y} {q :{¶} Y → type M Z}
+              ¶Σ[ assoc-law ∈ ({X Y Z :{#} Set ℓ} {fx : type M X} {k : X → type M Y} {q : Y → type M Z}
                                     → bind M (bind M fx k) q ≡ bind M fx (λ x → bind M (k x) q)) ]
               ⊤ ))
 
 open IsMonad public
 
-return-law1 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y :{#} Set ℓ} →  {x : X} → {k :{¶} X → type M Y}
+return-law1 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y :{#} Set ℓ} →  {x : X} → {k : X → type M Y}
                                                   → bind M (return M x) k ≡ k x
 return-law1 Mmon = ¶fst(unmonad Mmon)
 
 return-law2 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X :{#} Set ℓ} → {fx : type M X} → bind M fx (return M) ≡ fx
 return-law2 Mmon = ¶fst(¶snd(unmonad Mmon))
 
-assoc-law : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y Z :{#} Set ℓ} {fx : type M X} {k : X → type M Y} {q :{¶} Y → type M Z}
+assoc-law : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y Z :{#} Set ℓ} {fx : type M X} {k : X → type M Y} {q : Y → type M Z}
                     → bind M (bind M fx k) q ≡ bind M fx (λ x → bind M (k x) q)
 assoc-law Mmon = ¶fst(¶snd(¶snd(unmonad Mmon)))
 
@@ -76,7 +76,7 @@ record MonadMorphism {ℓ : Level} (M1 M2 : Premonad ℓ) : Set (lsuc ℓ) where
   field
     unmonad-morphism : Σ[ morphism ∈ ( {X :{#} Set ℓ} → type M1 X → type M2 X ) ] (
                        ¶Σ[ morph-return-law ∈ ( {X :{#} Set ℓ} {x : X} → morphism (return M1 x) ≡ return M2 x ) ] (
-                       ¶Σ[ morph-bind-law ∈ ( {X Y :{#} Set ℓ} {mx : type M1 X} {q :{¶} X → type M1 Y}
+                       ¶Σ[ morph-bind-law ∈ ( {X Y :{#} Set ℓ} {mx : type M1 X} {q : X → type M1 Y}
                                                  → morphism (bind M1 mx q) ≡ bind M2 (morphism mx) (morphism ∘ q) ) ]
                        ⊤ ) )
 
@@ -89,6 +89,6 @@ morph-return-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{#} MonadMorphism M1 
                          → morphism h (return M1 x) ≡ return M2 x
 morph-return-law {_} {M1} {M2} {h} = ¶fst(snd(unmonad-morphism h))
 
-morph-bind-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{#} MonadMorphism M1 M2} {X Y :{#} Set ℓ} {mx : type M1 X} {q :{¶} X → type M1 Y}
+morph-bind-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{#} MonadMorphism M1 M2} {X Y :{#} Set ℓ} {mx : type M1 X} {q : X → type M1 Y}
                        → morphism h (bind M1 mx q) ≡ bind M2 (morphism h mx) ((morphism h) ∘ q)
 morph-bind-law {_} {M1} {M2} {h} = ¶fst(¶snd(snd(unmonad-morphism h)))
