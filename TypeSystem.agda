@@ -231,7 +231,14 @@ _∘_ : ∀{ℓA ℓB ℓC} →
     ((a : A) → C (f a))
 _∘_ {ℓA}{ℓB}{ℓC}{A}{B}{C} g f a = g (f a)
 
+_∘¶_ : ∀{ℓA ℓB ℓC} {A :{#} Set ℓA} {B :{#} Set ℓB} {C :{#} B → Set ℓC} →
+       (g : (b : B) → C b) →
+       (f : (a :{¶} A) → B) →
+       ((a :{¶} A) → C (f a))
+_∘¶_ g f a = g (f a)
+
 infixr 20 _∘_
+infixr 20 _∘¶_
 
 -- FUNCTION EXTENSIONALITY
 
