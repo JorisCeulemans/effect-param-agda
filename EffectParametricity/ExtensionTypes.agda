@@ -3,6 +3,7 @@
 module EffectParametricity.ExtensionTypes where
 
 open import Monads.Monads
+open import PointwiseEquality
 open import Target
 open import TypeSystem
 
@@ -21,26 +22,55 @@ postulate
 {-# REWRITE rw-ext-β #-}
 {-# REWRITE rw-ext-η #-}
 
--- ext-subst : ∀{ℓ} (A : Set ℓ) {φ : Prop} (pa pa' :{¶} Partial A φ) → pa ≡ pa' → A [ pa ] → A [ pa' ]
--- ext-subst A pa pa' eq exta = J eq (λ y _ → A [ {!y!} ]) {!exta!}
+ext-subst : ∀{ℓ} (A :{#} Set ℓ) {φ :{#} Prop} {pa pa' :{¶} Partial A φ} → pa ¶≡ pa' → A [ pa ] → A [ pa' ]
+ext-subst A = ¶subst (λ y → A [ y ])
+
+glue-cong' : ∀ {la lb} {A :{#} Set la} {φ :{#} Prop} {T :{#} .(IsOne φ) → Set lb} {f :{¶} .(o : IsOne φ) → T o → A} →
+             (t t' :{¶} .(o : IsOne φ) → T o) →
+             (t-eq : t ¶≡ t') →
+             (a : A [ (λ o → f o (t o)) ]) (a' : A [ (λ o → f o (t' o)) ]) →
+             ¶subst (λ x → A [ (λ o → f o (x o)) ]) {t} {t'} t-eq a ≡ a' →
+             glue {f = f} t (paste[ (λ o → f o (t o)) ] a) ≡ glue t' (paste[ (λ o → f o (t' o)) ] a')
+glue-cong' {A = A} {φ} {T} {f = f} t t' t-eq = ¶J t t' t-eq
+                                          (λ y w → (a : A [ (λ o → f o (t o)) ]) (a' : A [ (λ o → f o (y o)) ]) →
+                                                    ¶subst (λ x → A [ (λ o → f o (x o)) ]) {t} {y} w a ≡ a' →
+                                                    glue {f = f} t (paste[ (λ o → f o (t o)) ] a) ≡ glue y (paste[ (λ o → f o (y o)) ] a'))
+                                          (λ a a' → cong {B = primGlue A φ T f} (λ x → glue t (paste[ (λ o → f o (t o)) ] x)))
 
 
-
+{-
+-- Using equality of pointwise pairs (meeting Dominique 20/10/19) ...
 glue-cong : ∀ {la lb} {A :{#} Set la} {φ :{#} Prop} {T :{#} .(IsOne φ) → Set lb} {f :{¶} .(o : IsOne φ) → T o → A} →
             (p p' : ¶Σ (.(o : IsOne φ) → T o) (λ t → A [ (λ o → f o (t o)) ])) → p ≡ p' →
             glue {f = f} (¶fst p) (paste[ (λ o → f o (¶fst p o)) ] (¶snd p)) ≡ glue (¶fst p') (paste[ (λ o → f o (¶fst p' o)) ] (¶snd p'))
 glue-cong {f = f} p p' eq = J eq (λ p' _ → glue {f = f} (¶fst p) (paste[ (λ o → f o (¶fst p o)) ] (¶snd p)) ≡ glue (¶fst p') (paste[ (λ o → f o (¶fst p' o)) ] (¶snd p'))) (refl _)
 
-to-¶Σ-eq : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} (_ : A) → Set ℓB}
-           {a a' :{¶} A} {b : B a} {b' : B a'} →
-           (a=a' : a ≡ a') →
-           subst B a=a' b ≡ b' →
+to-¶Σ-eq' : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} (_ :{¶} A) → Set ℓB}
+            {a a' :{¶} A} →
+            (a-eq : a ¶≡ a') →
+            (b : B a) (b' : B a') →
+            ¶subst B a-eq b ≡ b' →
+            [¶ a , b ] ≡ [¶ a' , b' ]
+to-¶Σ-eq' {B = B}{a}{a'} a-eq = ¶J a a' a-eq
+                                  (λ y w → (b : B a) (b' : B y) → ¶subst B w b ≡ b' → [¶ a , b ] ≡ [¶ y , b' ])
+                                  (λ b b' → cong (λ z → [¶ a , z ]))
+
+to-¶Σ-eq : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} (_ :{¶} A) → Set ℓB}
+           {a a' :{¶} A} →
+           (a-eq : a ¶≡ a') →
+           {b : B a} {b' : B a'} →
+           ¶subst B a-eq b ≡ b' →
            [¶ a , b ] ≡ [¶ a' , b' ]
-to-¶Σ-eq {a = a} {b = b} a=a' b=b' = {!!} -- J a=a' (λ y eq → [¶ a , b ] ≡ [¶ {!y!} , {!!} ]) {!!}
+to-¶Σ-eq a-eq {b} {b'} = to-¶Σ-eq' a-eq b b'
 
-
+from-¶Σ-eq : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} (_ :{¶} A) → Set ℓB}
+             {p p' : ¶Σ A B} →
+             p ≡ p' →
+             Σ[ fst-eq ∈ ¶fst p ¶≡ ¶fst p' ] (¶subst B fst-eq (¶snd p) ≡ ¶snd p')
+from-¶Σ-eq {B = B} {p} p-eq = J p-eq (λ y w → Σ[ fst-eq ∈ ¶fst p ¶≡ ¶fst y ] (¶subst B fst-eq (¶snd p) ≡ ¶snd y)) [ ¶refl (¶fst p) , refl (¶snd p) ]
+-}
 {-
--- Would it be sound to postulate the following?
+-- It is probably unsound to postulate congruence for pointwise functions (see mail Andreas 2/1/20).
 postulate
   ¶cong : ∀{ℓA ℓB} {A :{#} Set ℓA} {B :{#} Set ℓB} (f : (a :{¶} A) → B) {a a' :{¶} A} → a ≡ a' → f a ≡ f a'
   
