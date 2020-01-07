@@ -28,7 +28,7 @@ eta-¶Box p = cong (λ x → [¶ ¶fst p , x ]) (unique-⊤ (¶snd p) tt)
 ¶sym {a = a} {b} e = ¶J a b e (λ y _ → y ¶≡ a) (¶refl a)
 
 ¶trans : ∀ {ℓ} {A :{#} Set ℓ} {a b c :{¶} A} → a ¶≡ b → b ¶≡ c → a ¶≡ c
-¶trans {a = a} {b} {c} p q = ¶J b c q (λ y _ → a ¶≡ y) p
+¶trans {a = a} {b} {c} p q = ¶J b a (¶sym {a = a} {b} p) (λ y _ → y ¶≡ c) q
 
 ¶cong : ∀ {ℓA ℓB} →
         {A :{#} Set ℓA} →
@@ -37,3 +37,13 @@ eta-¶Box p = cong (λ x → [¶ ¶fst p , x ]) (unique-⊤ (¶snd p) tt)
         {a b :{¶} A} →
         (a ¶≡ b) → (f a ¶≡ f b)
 ¶cong {ℓA}{ℓB}{A}{B} f {a}{b} e = ¶J a b e (λ y w → f a ¶≡ f y) (¶refl (f a))
+
+¶J-app-¶eq : ∀ {ℓA ℓC} {A :{#} Set ℓA} {C :{#} Set ℓC} (a b :{¶} A) (e :{¶} a ¶≡ b)
+             (f :{¶} (y :{¶} A) → (w :{#} a ¶≡ y) → C) →
+             f a (¶refl a) ¶≡ f b e
+¶J-app-¶eq a b e f = ¶J a b e (λ y w → f a (¶refl a) ¶≡ f y w) (¶refl (f a (¶refl a)))
+
+¶J-app : ∀ {ℓA ℓC} {A :{#} Set ℓA} {C :{#} Set ℓC} (a b :{¶} A) (e : a ¶≡ b)
+         (f : (y :{¶} A) → (w : a ¶≡ y) → C) →
+         f a (¶refl a) ≡ f b e
+¶J-app a b e f = ¶J a b e (λ y w → f a (¶refl a) ≡ f y w) (refl _)
