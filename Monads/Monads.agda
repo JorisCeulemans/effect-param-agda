@@ -1,6 +1,7 @@
 {-# OPTIONS --cubical --rewriting #-}
 module Monads.Monads where
 
+open import PointwiseEquality
 open import TypeSystem
 open import Functors
 
@@ -46,7 +47,7 @@ join M mmx = bind M mmx id
 record IsMonad {ℓ : Level} (M : Premonad ℓ) : Set (lsuc ℓ) where
   constructor monad
   field
-    unmonad : ¶Σ[ return-law1 ∈ ({X Y :{#} Set ℓ} {x :{¶} X} {k :{¶} X → type M Y} → bind M (return M x) k ≡ k x) ] (
+    unmonad : ¶Σ[ return-law1 ∈ ({X Y :{#} Set ℓ} {x :{¶} X} {k :{¶} X → type M Y} → bind M (return M x) k ¶≡ k x) ] (
               ¶Σ[ return-law2 ∈ ({X :{#} Set ℓ} {fx :{¶} type M X} → bind M fx (return M) ≡ fx) ] (
               ¶Σ[ assoc-law ∈ ({X Y Z :{#} Set ℓ} {fx :{¶} type M X} {k :{¶} X → type M Y} {q :{¶} Y → type M Z}
                                     → bind M (bind M fx k) q ≡ bind M fx (λ (x :{¶} _) → bind M (k x) q)) ]
@@ -55,7 +56,7 @@ record IsMonad {ℓ : Level} (M : Premonad ℓ) : Set (lsuc ℓ) where
 open IsMonad public
 
 return-law1 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y :{#} Set ℓ} →  {x :{¶} X} → {k :{¶} X → type M Y}
-                                                  → bind M (return M x) k ≡ k x
+                                                  → bind M (return M x) k ¶≡ k x
 return-law1 Mmon = ¶fst(unmonad Mmon)
 
 return-law2 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X :{#} Set ℓ} → {fx :{¶} type M X} → bind M fx (return M) ≡ fx

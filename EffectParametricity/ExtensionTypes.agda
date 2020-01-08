@@ -31,12 +31,13 @@ ext-subst' {A = A} = ¶subst (λ y → A [ y ])
 
 -- TODO: ask Andreas whether the following is sound (in particular for the modalities).
 postulate
-  irr-funext : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Set ℓB} {f g :{¶} .A → B} → (.(x : A) → f x ¶≡ g x) → f ¶≡ g
+  irr-funext : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g : .(x : A) → B x} → (.(x : A) → f x ≡ g x) → f ≡ g
+  irr-funext-¶eq : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g :{¶} .(x : A) → B x} → (.(x : A) → f x ¶≡ g x) → f ¶≡ g
 
-partext-¶eq : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} (pa pa' :{¶} Partial A φ) →
-              PartialP φ (λ o → pa o ¶≡ pa' o) →
-              pa ¶≡ pa'
-partext-¶eq pa pa' e = irr-funext {f = pa} {pa'} e
+partext-¶eq : ∀ {ℓ} {φ :{#} Prop} {A :{#} Partial (Set ℓ) φ} (pa pa' :{¶} PartialP φ (λ o → A o)) →
+               PartialP φ (λ o → pa o ¶≡ pa' o) →
+               pa ¶≡ pa'
+partext-¶eq {A = A} pa pa' e = irr-funext-¶eq {B = A} {f = pa} {g = pa'} e
 
 ext-subst : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} (pa pa' :{¶} Partial A φ) →
             PartialP φ (λ o → pa o ¶≡ pa' o) →
@@ -83,15 +84,27 @@ glue-prop : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) 
             PartialP φ (λ o → a ¶≡ f o (t o)) →
             Glue⟨ A ← T , f ⟩
 glue-prop {φ = φ} {f = f} t a peq = glue⟨ t ↦ ext-subst (λ _ → a) (λ { (φ = p⊤) → f _ (t _) }) (λ { (φ = p⊤) → peq _ }) (cut a) ⟩
-{-
+
+postulate
+  uip : ∀ {ℓ} {A :{#} Set ℓ} {a b :{#} A} {e e' : a ≡ b} → e ≡ e'
+
 glue-prop-cong : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)} →
-                 (t t' :{¶} PartialP φ T) (a a' :{¶} A) →
-                 (peq : PartialP φ (λ o → a ¶≡ f o (t o))) (peq' : PartialP φ (λ o → a' ¶≡ f o (t' o))) →
-                 PartialP φ (λ .o → t o ≡ t' o) →
-                 a ≡ a' →
-                 {!glue-prop t a peq ≡ glue-prop t' a' peq'!}
-glue-prop-cong = {!!}
--}
+                 (t t' :{¶} PartialP φ (λ o → T o)) (t-eq : PartialP φ (λ o → t o ¶≡ t' o)) →
+                 (a a' :{¶} A) (a-eq : a ¶≡ a') →
+                 (peq :{¶} PartialP φ (λ o → a ¶≡ f o (t o))) (peq' :{¶} PartialP φ (λ o → a' ¶≡ f o (t' o))) →
+                 glue-prop {f = f} t a peq ≡ glue-prop t' a' peq'
+glue-prop-cong {A = A} {φ} {T} {f} t t' t-eq = ¶subst {A = PartialP φ (λ o → T o)}
+                                                      (λ y → (a a' :{¶} A) (a-eq : a ¶≡ a') →
+                                                              (peq :{¶} PartialP φ (λ o → a ¶≡ f o (t o))) (peq' :{¶} PartialP φ (λ o → a' ¶≡ f o (y o))) →
+                                                              glue-prop {f = f} t a peq ≡ glue-prop y a' peq')
+                                                      {x₁ = t} {x₂ = t'}
+                                                      (partext-¶eq {A = T} (λ o → t o) (λ o → t' o) t-eq)
+                                                      (λ a a' a-eq → ¶subst {A = A}
+                                                                             (λ y → (peq :{¶} PartialP φ (λ o → a ¶≡ f o (t o))) (peq' :{¶} PartialP φ (λ o → y ¶≡ f o (t o))) →
+                                                                                     glue-prop {f = f} t a peq ≡ glue-prop t y peq')
+                                                                             {x₁ = a} {x₂ = a'}
+                                                                             a-eq
+                                                                             (λ peq peq' → cong {A = PartialP φ (λ o → a ¶≡ f o (t o))} {B = Glue⟨ A ← T , f ⟩} (glue-prop t a) {a = peq} {b = peq'} (irr-funext (λ { o → uip }))))
 
 {-
 -- glue-cong using equality of pointwise pairs (meeting Dominique 20/10/19) ...
@@ -211,7 +224,8 @@ _∎ : ∀ {ℓ} {X :{#} Set ℓ} (x : X) → x ≡ x
 x ∎ = refl x
 
 infixr 25 _≡⟨_⟩_
-{-
+
+
 monad-law-br1 : (i : 𝕀) (X Y :{#} Set ℓ) (x :{¶} X) (q :{¶} (x :{¶} X) → type (pm-bridge i) Y) → bind (pm-bridge i) (return (pm-bridge i) x) q ≡ q x
 monad-law-br1 i X Y x q = bind (pm-bridge i) (return (pm-bridge i) x) q
   ≡⟨ refl _ ⟩ glue-prop (λ { ((i ≣ i0) = p⊤) → bind κ1 (return κ1 x) q ;
@@ -238,9 +252,22 @@ monad-law-br1 i X Y x q = bind (pm-bridge i) (return (pm-bridge i) x) q
                                              (¶cong (λ (z :{¶} _) → bind κ2 z (h ∘¶ q)) (¶sym {a = h (return κ1 x)} {b = return κ2 x} (h-return-law x)))
                                              (¶sym {a = h (bind κ1 (return κ1 x) q)} {b = bind κ2 (h (return κ1 x)) (h ∘¶ q)} h-bind-law) ;
                    ((i ≣ i1) = p⊤) → ¶refl (bind κ2 (return κ2 x) q) })
-  ≡⟨ {!!} ⟩ glue-prop (λ { ((i ≣ i0) = p⊤) → q x ;
-                           ((i ≣ i1) = p⊤) → q x })
-                     (unglue[ (λ { ((i ≣ i0) = p⊤) → h {Y} ; ((i ≣ i1) = p⊤) → id }) ] (q x))
-                     (λ { ((i ≣ i0) = p⊤) → ¶refl (h (q x)) ; ((i ≣ i1) = p⊤) → ¶refl (q x) })
+  ≡⟨ glue-prop-cong (λ { ((i ≣ i0) = p⊤) → bind κ1 (return κ1 x) q ;
+                         ((i ≣ i1) = p⊤) → bind κ2 (return κ2 x) q })
+                    (λ { ((i ≣ i0) = p⊤) → q x ; ((i ≣ i1) = p⊤) → q x })
+                    (λ { ((i ≣ i0) = p⊤) → return-law1 κ1-mon ; ((i ≣ i1) = p⊤) → return-law1 κ2-mon })
+                    (bind κ2 (return κ2 x) ((pull (h {Y}) i) ∘¶ q))
+                    (unglue[ (λ { ((i ≣ i0) = p⊤) → h {Y} ; ((i ≣ i1) = p⊤) → id }) ] (q x))
+                    (return-law1 κ2-mon)
+                    (λ { ((i ≣ i0) = p⊤) → ¶trans {a = bind κ2 (return κ2 x) (h ∘¶ q)}
+                                             {b = bind κ2 (h (return κ1 x)) (h ∘¶ q)}
+                                             {c = h (bind κ1 (return κ1 x) q)}
+                                             (¶cong (λ (z :{¶} _) → bind κ2 z (h ∘¶ q)) (¶sym {a = h (return κ1 x)} {b = return κ2 x} (h-return-law x)))
+                                             (¶sym {a = h (bind κ1 (return κ1 x) q)} {b = bind κ2 (h (return κ1 x)) (h ∘¶ q)} h-bind-law) ;
+                         ((i ≣ i1) = p⊤) → ¶refl (bind κ2 (return κ2 x) q) })
+                    (λ { ((i ≣ i0) = p⊤) → ¶refl (h (q x)) ; ((i ≣ i1) = p⊤) → ¶refl (q x) }) ⟩
+    glue-prop (λ { ((i ≣ i0) = p⊤) → q x ;
+                   ((i ≣ i1) = p⊤) → q x })
+              (unglue[ (λ { ((i ≣ i0) = p⊤) → h {Y} ; ((i ≣ i1) = p⊤) → id }) ] (q x))
+              (λ { ((i ≣ i0) = p⊤) → ¶refl (h (q x)) ; ((i ≣ i1) = p⊤) → ¶refl (q x) })
   ≡⟨ {!refl (q x)!} ⟩ (q x ∎)
--}
