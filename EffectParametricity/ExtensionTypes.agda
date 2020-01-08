@@ -7,6 +7,33 @@ open import PointwiseEquality
 open import Target
 open import TypeSystem
 
+_≡⟨_⟩_ : ∀ {ℓ} {X :{#} Set ℓ} (x : X) {y z : X} → x ≡ y → y ≡ z → x ≡ z
+x ≡⟨ p ⟩ q = p • q
+
+_∎ : ∀ {ℓ} {X :{#} Set ℓ} (x : X) → x ≡ x
+x ∎ = refl x
+
+infixr 25 _≡⟨_⟩_
+
+-- The following are supplementary axioms we will use (different versions of function extensionality +
+-- uniqueness of identity proofs).
+postulate
+  irr-funext : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g : .(x : A) → B x} → (.(x : A) → f x ≡ g x) → f ≡ g
+  irr-funext-¶eq : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g :{¶} .(x : A) → B x} → (.(x : A) → f x ¶≡ g x) → f ¶≡ g
+
+  funext-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
+               {f g :{¶} (a : A) → B a} →
+               ((a :{¶} A) → f a ¶≡ g a) → f ¶≡ g
+  #funext-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
+                {f g :{¶} (a :{#} A) → B a} →
+                ((a :{#} A) → f a ¶≡ g a) → f ¶≡ g
+  #funext-implicit-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
+                          {f g :{¶} {a :{#} A} → B a} →
+                          ({a :{#} A} → f {a} ¶≡ g {a}) → (λ {x :{#} _} → f {x}) ¶≡ (λ {x :{#} _} → g {x})
+
+  uip : ∀ {ℓ} {A :{#} Set ℓ} {a b :{#} A} {e e' : a ≡ b} → e ≡ e'
+
+
 -- Definition of extension types (taken from https://github.com/Saizan/parametric-demo/tree/experimental)
 
 postulate
@@ -29,10 +56,6 @@ postulate
 ext-subst' : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {pa pa' :{¶} Partial A φ} → pa ¶≡ pa' → A [ pa ] → A [ pa' ]
 ext-subst' {A = A} = ¶subst (λ y → A [ y ])
 
--- TODO: ask Andreas whether the following is sound (in particular for the modalities).
-postulate
-  irr-funext : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g : .(x : A) → B x} → (.(x : A) → f x ≡ g x) → f ≡ g
-  irr-funext-¶eq : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g :{¶} .(x : A) → B x} → (.(x : A) → f x ¶≡ g x) → f ¶≡ g
 
 partext-¶eq : ∀ {ℓ} {φ :{#} Prop} {A :{#} Partial (Set ℓ) φ} (pa pa' :{¶} PartialP φ (λ o → A o)) →
                PartialP φ (λ o → pa o ¶≡ pa' o) →
@@ -71,9 +94,11 @@ glue-cong {t = t}{t'}{a}{a'} t-eq a-eq = glue-cong' t t' t-eq a a' a-eq
 
 Glue⟨_←_,_⟩ : ∀{ℓ} (A : Set ℓ) {φ : Prop} (T : Partial (Set ℓ) φ) (f :{¶} PartialP φ (λ o → T o → A)) → Set ℓ
 Glue⟨ A ← T , f ⟩ = Glue A _ T f
+
 glue⟨_↦_⟩ : ∀{ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)}
   (t :{¶} PartialP φ T) (exta : A [ (λ{(φ = p⊤) → f _ (t _)}) ]) → Glue⟨ A ← T , f ⟩
 glue⟨_↦_⟩ {φ = φ} {f = f} t exta = glue (λ{(φ = p⊤) → t _}) (paste[ (λ{(φ = p⊤) → f _ (t _)}) ] exta)
+
 unglue[_] : ∀{ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} (f :{¶} PartialP φ (λ o → T o → A))
   → Glue⟨ A ← T , f ⟩ → A
 unglue[_] {A = A} {φ = φ} f g = unglue {_}{_}{A}{φ} g
@@ -84,9 +109,6 @@ glue-prop : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) 
             PartialP φ (λ o → a ¶≡ f o (t o)) →
             Glue⟨ A ← T , f ⟩
 glue-prop {φ = φ} {f = f} t a peq = glue⟨ t ↦ ext-subst (λ _ → a) (λ { (φ = p⊤) → f _ (t _) }) (λ { (φ = p⊤) → peq _ }) (cut a) ⟩
-
-postulate
-  uip : ∀ {ℓ} {A :{#} Set ℓ} {a b :{#} A} {e e' : a ≡ b} → e ≡ e'
 
 glue-prop-cong : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)} →
                  (t t' :{¶} PartialP φ (λ o → T o)) (t-eq : PartialP φ (λ o → t o ¶≡ t' o)) →
@@ -105,6 +127,22 @@ glue-prop-cong {A = A} {φ} {T} {f} t t' t-eq = ¶subst {A = PartialP φ (λ o �
                                                                              {x₁ = a} {x₂ = a'}
                                                                              a-eq
                                                                              (λ peq peq' → cong {A = PartialP φ (λ o → a ¶≡ f o (t o))} {B = Glue⟨ A ← T , f ⟩} (glue-prop t a) {a = peq} {b = peq'} (irr-funext (λ { o → uip }))))
+
+glue-prop-eta : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)} →
+                (b :{¶} Glue⟨ A ← T , f ⟩) →
+                glue-prop {A = A} {φ = φ} {T = T} {f = f} (λ { (φ = p⊤) → b }) (unglue[ f ] b) (λ { (φ = p⊤) → ¶refl (f _ b) }) ≡ b
+glue-prop-eta {A = A} {φ = φ} {T = T} {f = f} b = glue-prop {A = A} {φ = φ} {T = T} {f = f} (λ { (φ = p⊤) → b }) (unglue[ f ] b) (λ { (φ = p⊤) → ¶refl (f _ b) })
+  ≡⟨ {!refl _!} ⟩ glue⟨ (λ { (φ = p⊤) → b }) ↦ ext-subst (λ _ → unglue[ f ] b) (λ { (φ = p⊤) → f _ b }) (λ { (φ = p⊤) → ¶refl (f _ b) }) (cut (unglue[ f ] b)) ⟩
+  ≡⟨ {!refl _!} ⟩ glue (λ { (φ = p⊤) → b }) (paste[ (λ { (φ = p⊤) → f _ b }) ] ext-subst (λ _ → unglue[ f ] b) (λ { (φ = p⊤) → f _ b }) (λ { (φ = p⊤) → ¶refl (f _ b) }) (cut (unglue[ f ] b)))
+  ≡⟨ {!refl _!} ⟩ glue (λ { (φ = p⊤) → b }) (paste[ (λ { (φ = p⊤) → f _ b }) ] ext-subst' (partext-¶eq (λ _ → unglue[ f ] b) (λ { (φ = p⊤) → f _ b }) (λ { (φ = p⊤) → ¶refl (f _ b) })) (cut (unglue[ f ] b)))
+  ≡⟨ {!cong (λ y → glue (λ { (φ = p⊤) → b }) (paste[ (λ { (φ = p⊤) → f _ b }) ] ext-subst' y (cut (unglue[ f ] b))))
+           {partext-¶eq (λ _ → unglue[ f ] b) (λ { (φ = p⊤) → f _ b }) (λ { (φ = p⊤) → ¶refl (f _ b) })}
+           {¶refl (λ _ → unglue[ f ] b)}
+           {!uip {A = ?} {a = ?} {b = ?} {e = ?} {e' = ?}!}!} ⟩
+     glue (λ { (φ = p⊤) → b }) (paste[ (λ { (φ = p⊤) → f _ b }) ] ext-subst' (¶refl (λ _ → unglue[ f ] b)) (cut (unglue[ f ] b)))
+  ≡⟨ {!refl _!} ⟩ glue (λ { (φ = p⊤) → b}) (paste[ (λ { (φ = p⊤) → f _ b }) ] (cut (unglue[ f ] b)))
+  ≡⟨ {!refl _!} ⟩ glue (λ { (φ = p⊤) → b }) (unglue[ f ] b)
+  ≡⟨ refl _ ⟩ (b ∎)
 
 {-
 -- glue-cong using equality of pointwise pairs (meeting Dominique 20/10/19) ...
@@ -193,18 +231,6 @@ endpoint-0 = cong (λ x → premonad [ type κ1 ,
                                     x ] ] ])
                    (unique-⊤ tt (trivial κ1))
 
--- Is this sound?
-postulate
-  funext-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
-               {f g :{¶} (a : A) → B a} →
-               ((a :{¶} A) → f a ¶≡ g a) → f ¶≡ g
-  #funext-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
-                {f g :{¶} (a :{#} A) → B a} →
-                ((a :{#} A) → f a ¶≡ g a) → f ¶≡ g
-  #funext-implicit-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
-                          {f g :{¶} {a :{#} A} → B a} →
-                          ({a :{#} A} → f {a} ¶≡ g {a}) → (λ {x :{#} _} → f {x}) ¶≡ (λ {x :{#} _} → g {x})
-
 endpoint-1 : pm-bridge i1 ≡ κ2
 endpoint-1 = ¶≡-to-≡ _ _ (¶cong (λ x → premonad [ type κ2 , [¶ x , [¶ (λ {_ _ :{#} _} → bind κ2) , tt ] ] ])
                                 {a = λ {X :{#} _} x → h (return κ1 x)} {b = λ {X :{#} _} x → return κ2 x}
@@ -216,15 +242,6 @@ endpoint-1 = ¶≡-to-≡ _ _ (¶cong (λ x → premonad [ type κ2 , [¶ x , [�
                                    [¶ (λ {_ _ :{#} _} → bind κ2) ,
                                    x ] ] ])
                   (unique-⊤ tt (trivial κ2))
-
-_≡⟨_⟩_ : ∀ {ℓ} {X :{#} Set ℓ} (x : X) {y z : X} → x ≡ y → y ≡ z → x ≡ z
-x ≡⟨ p ⟩ q = p • q
-
-_∎ : ∀ {ℓ} {X :{#} Set ℓ} (x : X) → x ≡ x
-x ∎ = refl x
-
-infixr 25 _≡⟨_⟩_
-
 
 monad-law-br1 : (i : 𝕀) (X Y :{#} Set ℓ) (x :{¶} X) (q :{¶} (x :{¶} X) → type (pm-bridge i) Y) → bind (pm-bridge i) (return (pm-bridge i) x) q ≡ q x
 monad-law-br1 i X Y x q = bind (pm-bridge i) (return (pm-bridge i) x) q
@@ -270,4 +287,4 @@ monad-law-br1 i X Y x q = bind (pm-bridge i) (return (pm-bridge i) x) q
                    ((i ≣ i1) = p⊤) → q x })
               (unglue[ (λ { ((i ≣ i0) = p⊤) → h {Y} ; ((i ≣ i1) = p⊤) → id }) ] (q x))
               (λ { ((i ≣ i0) = p⊤) → ¶refl (h (q x)) ; ((i ≣ i1) = p⊤) → ¶refl (q x) })
-  ≡⟨ {!refl (q x)!} ⟩ (q x ∎)
+  ≡⟨ glue-prop-eta {φ = (i ≣ i0) ∨ (i ≣ i1)} (q x) ⟩ (q x ∎)
