@@ -3,7 +3,7 @@
 module EffectParametricity.ExtensionTypes where
 
 open import Monads.Monads
-open import PointwiseEquality
+-- open import PointwiseEquality
 open import Target
 open import TypeSystem
 

@@ -1,7 +1,7 @@
 {-# OPTIONS --cubical --rewriting #-}
 module Monads.Monads where
 
-open import PointwiseEquality
+-- open import PointwiseEquality
 open import TypeSystem
 open import Functors
 
@@ -47,23 +47,23 @@ join M mmx = bind M mmx id
 record IsMonad {ℓ : Level} (M : Premonad ℓ) : Set (lsuc ℓ) where
   constructor monad
   field
-    unmonad : ¶Σ[ return-law1 ∈ ({X Y :{#} Set ℓ} {x :{¶} X} {k :{¶} X → type M Y} → bind M (return M x) k ¶≡ k x) ] (
-              ¶Σ[ return-law2 ∈ ({X :{#} Set ℓ} {fx :{¶} type M X} → bind M fx (return M) ≡ fx) ] (
-              ¶Σ[ assoc-law ∈ ({X Y Z :{#} Set ℓ} {fx :{¶} type M X} {k :{¶} X → type M Y} {q :{¶} Y → type M Z}
-                                    → bind M (bind M fx k) q ≡ bind M fx (λ (x :{¶} _) → bind M (k x) q)) ]
+    unmonad : ¶Σ[ return-law1 ∈ ({X Y :{#} Set ℓ} {x :{¶} X} {k :{¶} (x :{¶} X) → type M Y} → bind M (return M x) k ¶≡ k x) ] (
+              ¶Σ[ return-law2 ∈ ({X :{#} Set ℓ} {fx :{¶} type M X} → bind M fx (return M) ¶≡ fx) ] (
+              ¶Σ[ assoc-law ∈ ({X Y Z :{#} Set ℓ} {fx :{¶} type M X} {k :{¶} (x :{¶} X) → type M Y} {q :{¶} (y :{¶} Y) → type M Z}
+                                    → bind M (bind M fx k) q ¶≡ bind M fx (λ (x :{¶} _) → bind M (k x) q)) ]
               ⊤ ))
 
 open IsMonad public
 
-return-law1 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y :{#} Set ℓ} →  {x :{¶} X} → {k :{¶} X → type M Y}
+return-law1 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y :{#} Set ℓ} → {x :{¶} X} → {k :{¶} (x :{¶} X) → type M Y}
                                                   → bind M (return M x) k ¶≡ k x
 return-law1 Mmon = ¶fst(unmonad Mmon)
 
-return-law2 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X :{#} Set ℓ} → {fx :{¶} type M X} → bind M fx (return M) ≡ fx
+return-law2 : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X :{#} Set ℓ} → {fx :{¶} type M X} → bind M fx (return M) ¶≡ fx
 return-law2 Mmon = ¶fst(¶snd(unmonad Mmon))
 
-assoc-law : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y Z :{#} Set ℓ} {fx :{¶} type M X} {k :{¶} X → type M Y} {q :{¶} Y → type M Z}
-                    → bind M (bind M fx k) q ≡ bind M fx (λ x → bind M (k x) q)
+assoc-law : ∀ {ℓ} {M :{#} Premonad ℓ} (Mmon :{#} IsMonad M) {X Y Z :{#} Set ℓ} {fx :{¶} type M X} {k :{¶} (x :{¶} X) → type M Y} {q :{¶} (y :{¶} Y) → type M Z}
+                    → bind M (bind M fx k) q ¶≡ bind M fx (λ x → bind M (k x) q)
 assoc-law Mmon = ¶fst(¶snd(¶snd(unmonad Mmon)))
 {- Reimplemantation needed because of addition of pointwise modalities
 monad-funct : ∀ {ℓ} {M : Premonad ℓ} → IsMonad M → Functor ℓ ℓ

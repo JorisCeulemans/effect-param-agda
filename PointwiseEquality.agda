@@ -2,6 +2,7 @@
 
 module PointwiseEquality where
 
+open import Primitives
 open import TypeSystem
 
 _¶≡_ : ∀ {ℓ} {A : Set ℓ} (a b :{¶} A) → Set ℓ

@@ -1,9 +1,9 @@
 {-# OPTIONS --cubical --rewriting #-}
 module Monads.Examples where
 
+-- open import PointwiseEquality
 open import TypeSystem
 open import Monads.Monads
-
 id-premonad : ∀ {ℓ} → Premonad ℓ
 id-premonad = premonad [ id ,
                        [¶ (λ x → x) ,
@@ -11,46 +11,46 @@ id-premonad = premonad [ id ,
                        tt ] ] ]           
 
 id-monad : ∀ {ℓ} → IsMonad id-premonad
-id-monad {ℓ} = monad [¶ (λ {_ _ :{#} Set ℓ} {_} {_} → refl _) ,
-                     [¶ (λ {_ :{#} Set ℓ} {_} → refl _) ,
-                     [¶ (λ {_ _ _ :{#} Set ℓ} {_} {_} {_} → refl _) ,
+id-monad {ℓ} = monad [¶ (λ {_ _ :{#} Set ℓ} {x :{¶} _} {q :{¶} _} → ¶refl (q x)) ,
+                     [¶ (λ {_ :{#} Set ℓ} {x :{¶} _} → ¶refl x) ,
+                     [¶ (λ {_ _ _ :{#} Set ℓ} {x :{¶} _} {k :{¶} _} {q :{¶} _} → ¶refl (q (k x))) ,
                      tt ] ] ]
 
 maybe-premonad : ∀ {ℓ} → Premonad ℓ
 maybe-premonad {ℓ} = premonad [ Maybe ,
                               [¶ (λ {X :{#} Set ℓ} x → just x) ,
-                              [¶ (λ {X Y :{#} Set ℓ} mx k → maybe k nothing mx) ,
+                              [¶ (λ {X Y :{#} Set ℓ} mx k → maybe¶ k nothing mx) ,
                               tt ] ] ]
 
-maybe-return-law2 : ∀ {ℓ} {X :{#} Set ℓ} {mx : Maybe X} → maybe just nothing mx ≡ mx
-maybe-return-law2 {ℓ} {_} {mx} = maybe {B = λ mx' → maybe just nothing mx' ≡ mx'} (λ x → refl (just x)) (refl nothing) mx
+maybe-return-law2 : ∀ {ℓ} {X :{#} Set ℓ} (mx :{¶} Maybe X) → maybe¶ just nothing mx ¶≡ mx
+maybe-return-law2 {ℓ} {_} mx = maybe¶ {B = λ mx' → maybe¶ just nothing mx' ¶≡ mx'} (λ x → ¶refl (just x)) (¶refl nothing) mx
 
-maybe-assoc-law : ∀ {ℓ} {X Y Z :{#} Set ℓ} {mx : Maybe X} {k : X → Maybe Y} {q : Y → Maybe Z}
-                           → maybe {B = λ mx' → Maybe Z} q nothing (maybe k nothing mx) ≡ maybe (λ x → maybe q nothing (k x)) nothing mx
-maybe-assoc-law {ℓ} {X} {Y} {Z} {mx} {k} {q} = maybe {B = λ mx'' → maybe q nothing (maybe k nothing mx'') ≡
-                                                                    maybe (λ x → maybe q nothing (k x)) nothing mx''}
-                                                     (λ x → refl (maybe q nothing (k x)))
-                                                     (refl nothing)
-                                                     mx
+maybe-assoc-law : ∀ {ℓ} {X Y Z :{#} Set ℓ} (mx :{¶} Maybe X) (k :{¶} (x :{¶} X) → Maybe Y) (q :{¶} (y :{¶} Y) → Maybe Z)
+                           → maybe¶ {B = λ mx' → Maybe Z} q nothing (maybe¶ k nothing mx) ¶≡ maybe¶ (λ x → maybe¶ q nothing (k x)) nothing mx
+maybe-assoc-law {ℓ} {X} {Y} {Z} mx k q = maybe¶ {B = λ mx'' → maybe¶ q nothing (maybe¶ k nothing mx'') ¶≡
+                                                               maybe¶ {B = λ x → Maybe Z} (λ x → maybe¶ q nothing (k x)) nothing mx''}
+                                                (λ x → ¶refl (maybe¶ q nothing (k x)))
+                                                (¶refl nothing)
+                                                mx
 
 maybe-monad : ∀ {ℓ} → IsMonad maybe-premonad
-maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {_} {_} → refl _ ) ,
-                        [¶ (λ {X :{#} Set ℓ} {mx} → maybe-return-law2) ,
-                        [¶ (λ {X Y Z :{#} Set ℓ} {mx} {k} {q} → maybe-assoc-law {mx = mx}) ,
+maybe-monad {ℓ} = monad [¶ (λ {X Y :{#} Set ℓ} {x :{¶} _} {q :{¶} _} → ¶refl (q x) ) ,
+                        [¶ (λ {X :{#} Set ℓ} {mx :{¶} _} → maybe-return-law2 mx) ,
+                        [¶ (λ {X Y Z :{#} Set ℓ} {mx :{¶} _} {k :{¶} _} {q :{¶} _} → maybe-assoc-law mx k q) ,
                         tt ] ] ]
 
 state-premonad : ∀ {k} ℓ → (S : Set k) → Premonad (k ⊔ ℓ)
-state-premonad ℓ S = premonad [ (λ X → (S → X × S)) ,
+state-premonad ℓ S = premonad [ (λ X → ((_ :{¶} S) → X × S)) ,
                               [¶ (λ {X :{#} Set _} x s → [ x , s ]) ,
                               [¶ (λ {X Y :{#} Set _} sx k s → k (fst (sx s)) (snd (sx s))) ,
                               tt ] ] ]
 
 state-monad : ∀ {k ℓ} (S : Set k) → IsMonad (state-premonad ℓ S)
-state-monad S = monad [¶ (λ {X Y :{#} Set _} {x} {k} → refl (k x)) ,
-                      [¶ (λ {X :{#} Set _} {sx} → refl sx) ,
-                      [¶ (λ {X Y Z :{#} Set _} {sx} {k} {q} → refl _) ,
+state-monad S = monad [¶ (λ {X Y :{#} Set _} {x :{¶} _} {k :{¶} _} → ¶refl (k x)) ,
+                      [¶ (λ {X :{#} Set _} {sx :{¶} _} → ¶refl sx) ,
+                      [¶ (λ {X Y Z :{#} Set _} {sx :{¶} _} {k :{¶} _} {q :{¶} _} → refl _) ,
                       tt ] ] ]
-
+{-
 record Magma (ℓ : Level) : Set (lsuc ℓ) where
   constructor magma
   field
@@ -122,3 +122,4 @@ return-morphism M Mmon = monad-morphism [ (λ {X :{#} Set _} → return M) ,
                                         [¶ (λ {X :{#} Set _} {x} → refl (return M x)) ,
                                         [¶ (λ {X Y :{#} Set _} {mx} {q} → sym (return-law1 Mmon)) ,
                                         tt ] ] ]
+-}

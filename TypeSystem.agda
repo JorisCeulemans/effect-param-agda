@@ -314,14 +314,13 @@ path-to-eq p = sym (#cong-app (pathDisc p) i1)
 -- Lifting --
 ---------------------------------
 postulate
-  Lift : ∀{ℓ} → Set ℓ → Set (lsuc ℓ)
-  lift : ∀{ℓ} → {A :{#} Set ℓ} → A → Lift A
-  lower : ∀{ℓ} → {A :{#} Set ℓ} → Lift A → A
-  rw-lift-β : ∀{ℓ} → {A :{#} Set ℓ} → (a : A) → lower (lift a) ≡ a
-  rw-lift-η : ∀{ℓ} → {A :{#} Set ℓ} → (a : Lift A) → lift (lower a) ≡ a
+  Lift : ∀{ℓ} ℓ' → Set ℓ → Set (ℓ ⊔ ℓ')
+  lift : ∀{ℓ} ℓ' → {A :{#} Set ℓ} → A → Lift ℓ' A
+  lower : ∀{ℓ} ℓ' → {A :{#} Set ℓ} → Lift ℓ' A → A
+  rw-lift-β : ∀{ℓ} ℓ' → {A :{#} Set ℓ} → (a : A) → lower ℓ' (lift ℓ' a) ≡ a
+  rw-lift-η : ∀{ℓ} ℓ' → {A :{#} Set ℓ} → (a : Lift ℓ' A) → lift ℓ' (lower ℓ' a) ≡ a
 {-# REWRITE rw-lift-β #-}
 {-# REWRITE rw-lift-η #-}
-
 
 ---------------
 -- Booleans
@@ -333,8 +332,16 @@ postulate
  bool : ∀ {a} {A :{ # } Bool → Set a} → A true → A false → ∀ b → A b
  bool-rw1 : ∀ {a} {A :{ # } Bool → Set a} → (t : A true) → (f : A false) → bool {A = A} t f true ≡ t
  bool-rw2 : ∀ {a} {A :{ # } Bool → Set a} → (t : A true) → (f : A false) → bool {A = A} t f false ≡ f
+ bool# : ∀ {a} {A :{ # } Bool → Set a} → A true → A false → (b :{#} Bool) → A b
+ bool#-rw1 : ∀ {a} {A :{ # } Bool → Set a} → (t : A true) → (f : A false) → bool# {A = A} t f true ≡ t
+ bool#-rw2 : ∀ {a} {A :{ # } Bool → Set a} → (t : A true) → (f : A false) → bool# {A = A} t f false ≡ f
+ bool¶ : ∀ {a} {A :{ # } (_ :{¶} Bool) → Set a} → A true → A false → (b :{¶} Bool) → A b
+ bool¶-rw1 : ∀ {a} {A :{ # } (_ :{¶} Bool) → Set a} → (t : A true) → (f : A false) → bool¶ {A = A} t f true ≡ t
+ bool¶-rw2 : ∀ {a} {A :{ # } (_ :{¶} Bool) → Set a} → (t : A true) → (f : A false) → bool¶ {A = A} t f false ≡ f
 
 {-# REWRITE bool-rw1 bool-rw2 #-}
+{-# REWRITE bool#-rw1 bool#-rw2 #-}
+{-# REWRITE bool¶-rw1 bool¶-rw2 #-}
 
 infix  0 if_then_else_
 if_then_else_ : ∀ {a} {A :{#} Set a} → Bool → A → A → A
@@ -345,8 +352,35 @@ ifp_thenp_elsep_ : ∀ {a} {A :{#} Bool → Set a} → (b : Bool) → ((b ≡ tr
 ifp_thenp_elsep_ = bool (λ tr fa → tr (refl true)) (λ tr fa → fa (refl false))
 
 
-_+_ : ∀{ℓ} → Set ℓ → Set ℓ → Set ℓ
-A + B = Σ Bool \ b → if b then A else B
+_+_ : ∀{ℓA ℓB} → Set ℓA → Set ℓB → Set (ℓA ⊔ ℓB)
+_+_ {ℓA} {ℓB} A B = Σ Bool \ b → if b then Lift ℓB A else Lift ℓA B
+
+inl : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Set ℓB} → A → A + B
+inl a = [ true , lift _ a ]
+
+inr : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Set ℓB} → B → A + B
+inr b = [ false , lift _ b ]
+
++-elim : ∀ {ℓA ℓB ℓC} {A :{#} Set ℓA} {B :{#} Set ℓB}
+         (C :{#} A + B → Set ℓC)
+         (left : (a : A) → C (inl a))
+         (right : (b : B) → C (inr b))
+         (x : A + B) → C x
++-elim {ℓA} {ℓB} {ℓC} {A} {B} C left right x = bool {A = λ b → (s : if b then Lift ℓB A else Lift ℓA B) → C [ b , s ]} (left ∘ lower _) (right ∘ lower _) (fst x) (snd x)
+
++-elim# : ∀ {ℓA ℓB ℓC} {A :{#} Set ℓA} {B :{#} Set ℓB}
+          (C :{#} A + B → Set ℓC)
+          (left : (a :{#} A) → C (inl a))
+          (right : (b :{#} B) → C (inr b))
+          (x :{#} A + B) → C x
++-elim# {ℓA}{ℓB}{ℓC}{A}{B} C left right x = bool# {A = λ b → (s :{#} if b then Lift ℓB A else Lift ℓA B) → C [ b , s ]} (λ y → left (lower _ y)) (λ y → right (lower _ y)) (fst x) (snd x)
+
++-elim¶ : {ℓA ℓB ℓC :{¶} _} {A :{#} Set ℓA} {B :{#} Set ℓB}
+          (C :{#} (_ :{¶} A + B) → Set ℓC)
+          (left : (a :{¶} A) → C (inl a))
+          (right : (b :{¶} B) → C (inr b))
+          (x :{¶} A + B) → C x
++-elim¶ {ℓA}{ℓB}{ℓC}{A}{B} C left right x = bool¶ {A = λ b → (s :{¶} if b then Lift ℓB A else Lift ℓA B) → C [ b , s ]} (λ s → left (lower _ s)) (λ s → right (lower _ s)) (fst x) (snd x)
 
 ---------------
 -- Unit
@@ -357,11 +391,66 @@ postulate
   tt : ⊤
   unit : ∀ {a} {A :{ # } ⊤ → Set a} → A tt → ∀ b → A b
   unit-rw : ∀ {a} {A :{ # } ⊤ → Set a} → (t : A tt) → unit {A = A} t tt ≡ t
+  unit# : ∀ {a} {A :{ # } ⊤ → Set a} → A tt → (b :{#} ⊤) → A b
+  unit#-rw : ∀ {a} {A :{ # } ⊤ → Set a} → (t : A tt) → unit# {A = A} t tt ≡ t
+  unit¶ : ∀ {a} {A :{ # } (_ :{¶} ⊤) → Set a} → A tt → (b :{¶} ⊤) → A b
+  unit¶-rw : ∀ {a} {A :{ # } (_ :{¶} ⊤) → Set a} → (t : A tt) → unit¶ {A = A} t tt ≡ t
 
-{-# REWRITE unit-rw #-}
+{-# REWRITE unit-rw unit#-rw unit¶-rw #-}
 
-unique-⊤ : (x y : ⊤) → x ≡ y
-unique-⊤ x y = unit {A = λ t → t ≡ y} (unit {A = λ t' → tt ≡ t'} (refl tt) y) x
+unique-⊤ : (x y :{#} ⊤) → x ≡ y
+unique-⊤ x y = unit# {A = λ t → t ≡ y} (unit# {A = λ t' → tt ≡ t'} (refl tt) y) x
+
+---------------------------------
+-- Pointwise equality --
+---------------------------------
+_¶≡_ : ∀ {ℓ} {A : Set ℓ} (a b :{¶} A) → Set ℓ
+a ¶≡ b = [¶ a , tt ] ≡ [¶ b , tt ]
+
+¶refl : ∀ {ℓ} {A :{#} Set ℓ} (a :{¶} A) → a ¶≡ a
+¶refl a = refl [¶ a , tt ]
+
+¶≡-to-≡ : ∀ {ℓ} {A :{#} Set ℓ} (a b :{¶} A) → a ¶≡ b → a ≡ b
+¶≡-to-≡ a b e = cong ¶fst e
+
+eta-¶Box : ∀ {ℓ} {A :{#} Set ℓ} (p : ¶Σ A (λ _ → ⊤)) → p ≡ [¶ ¶fst p , tt ]
+eta-¶Box p = cong (λ x → [¶ ¶fst p , x ]) (unique-⊤ (¶snd p) tt)
+
+¶J : ∀ {ℓA ℓC} {A :{#} Set ℓA} (a b :{¶} A) (e : a ¶≡ b) (C :{#} (y :{¶} A) → (w : a ¶≡ y) → Set ℓC) (c : C a (¶refl a))
+   → C b e
+¶J a b e C c = J e (λ y w → C (¶fst y) (w • eta-¶Box y)) c
+
+¶subst : ∀ {a p} → {A :{#} Set a} → (P :{#} (_ :{¶} A) → Set p) →
+         {x₁ x₂ :{¶} A} → x₁ ¶≡ x₂ → P x₁ → P x₂
+¶subst P {x₁} {x₂} eq p = ¶J x₁ x₂ eq (λ y _ → P y) p
+
+¶sym : ∀ {ℓ} {A :{#} Set ℓ} {a b :{¶} A} → a ¶≡ b → b ¶≡ a
+¶sym {a = a} {b} e = ¶J a b e (λ y _ → y ¶≡ a) (¶refl a)
+
+¶trans : ∀ {ℓ} {A :{#} Set ℓ} {a b c :{¶} A} → a ¶≡ b → b ¶≡ c → a ¶≡ c
+¶trans {a = a} {b} {c} p q = ¶J b a (¶sym {a = a} {b} p) (λ y _ → y ¶≡ c) q
+
+¶cong : ∀ {ℓA ℓB} →
+        {A :{#} Set ℓA} →
+        {B :{#} Set ℓB} →
+        (f :{¶} (_ :{¶} A) → B) →
+        {a b :{¶} A} →
+        (a ¶≡ b) → (f a ¶≡ f b)
+¶cong {ℓA}{ℓB}{A}{B} f {a}{b} e = ¶J a b e (λ y w → f a ¶≡ f y) (¶refl (f a))
+
+¶J-app-¶eq : ∀ {ℓA ℓC} {A :{#} Set ℓA} {C :{#} Set ℓC} (a b :{¶} A) (e :{¶} a ¶≡ b)
+             (f :{¶} (y :{¶} A) → (w :{#} a ¶≡ y) → C) →
+             f a (¶refl a) ¶≡ f b e
+¶J-app-¶eq a b e f = ¶J a b e (λ y w → f a (¶refl a) ¶≡ f y w) (¶refl (f a (¶refl a)))
+
+¶J-app : ∀ {ℓA ℓC} {A :{#} Set ℓA} {C :{#} Set ℓC} (a b :{¶} A) (e : a ¶≡ b)
+         (f : (y :{¶} A) → (w : a ¶≡ y) → C) →
+         f a (¶refl a) ≡ f b e
+¶J-app a b e f = ¶J a b e (λ y w → f a (¶refl a) ≡ f y w) (refl _)
+
+unique-⊤-¶eq : (x y :{¶} ⊤) → x ¶≡ y
+unique-⊤-¶eq x y = unit¶ {A = λ t → t ¶≡ y} (unit¶ {A = λ t' → tt ¶≡ t'} (¶refl tt) y) x
+
 
 ---------------
 -- Numbers
@@ -452,27 +541,35 @@ sum l = list zero (λ n _ s → n +Nat s) l
 -- Maybe
 ---------------
 
-postulate
-  Maybe : ∀ {ℓ} → Set ℓ → Set ℓ
-  just : ∀ {ℓ} {A :{#} Set ℓ} → A → Maybe A
-  nothing : ∀ {ℓ} {A :{#} Set ℓ} → Maybe A
-  maybe : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
-            → (jst : (a : A) → B (just a))
-            → (ntg : B nothing)
-            → (ma : Maybe A)
-            → B ma
-  maybe-rw-ntg : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
-                   → (jst : (a : A) → B (just a))
-                   → (ntg : B nothing)
-                   → maybe {B = B} jst ntg nothing ≡ ntg
-  maybe-rw-jst : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
-                   → (jst : (a : A) → B (just a))
-                   → (ntg : B nothing)
-                   → (a : A)
-                   → maybe {B = B} jst ntg (just a) ≡ jst a
+Maybe : ∀ {ℓ} → Set ℓ → Set ℓ
+Maybe A = ⊤ + A
 
-{-# REWRITE maybe-rw-ntg #-}
-{-# REWRITE maybe-rw-jst #-}
+just : ∀ {ℓ} {A :{#} Set ℓ} → A → Maybe A
+just a = inr a
+
+nothing : ∀ {ℓ} {A :{#} Set ℓ} → Maybe A
+nothing = inl tt
+
+maybe : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
+        → (jst : (a : A) → B (just a))
+        → (ntg : B nothing)
+        → (ma : Maybe A)
+        → B ma
+maybe {B = B} jst ntg ma = +-elim B (λ x → subst (λ y → B (inl y)) (unique-⊤ tt x) ntg) jst ma
+
+maybe# : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Maybe A → Set ℓB}
+         → (jst : (a :{#} A) → B (just a))
+         → (ntg : B nothing)
+         → (ma :{#} Maybe A)
+         → B ma
+maybe# {B = B} jst ntg ma = +-elim# B (λ x → subst (λ y → B (inl y)) (unique-⊤ tt x) ntg) jst ma
+
+maybe¶ : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} (_ :{¶} Maybe A) → Set ℓB}
+         → (jst : (a :{¶} A) → B (just a))
+         → (ntg : B nothing)
+         → (ma :{¶} Maybe A)
+         → B ma
+maybe¶ {B = B} jst ntg ma = +-elim¶ B (λ x → ¶subst (λ y → B (inl y)) {tt} {x} (unique-⊤-¶eq tt x) ntg) jst ma
 
 mb-map : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} Set ℓB} → (A → B) → Maybe A → Maybe B
 mb-map f ma = maybe (λ a → just (f a)) nothing ma
