@@ -79,9 +79,9 @@ MonadMap {ℓ} M1 M2 = {X :{#} Set ℓ} → type M1 X → type M2 X
 record IsMonadMorphism {ℓ : Level} (M1 M2 : Premonad ℓ) (h :{¶} MonadMap M1 M2) : Set (lsuc ℓ) where
   constructor monad-morphism
   field
-    unmonad-morphism : ¶Σ[ morph-return-law ∈ ( {X :{#} Set ℓ} {x : X} → h (return M1 x) ≡ return M2 x ) ] (
+    unmonad-morphism : ¶Σ[ morph-return-law ∈ ( {X :{#} Set ℓ} {x :{¶} X} → h (return M1 x) ¶≡ return M2 x ) ] (
                        ¶Σ[ morph-bind-law ∈ ( {X Y :{#} Set ℓ} {mx :{¶} type M1 X} {q :{¶} (x :{¶} X) → type M1 Y}
-                                                 → h (bind M1 mx q) ≡ bind M2 (h mx) (h ∘¶ q) ) ]
+                                                 → h (bind M1 mx q) ¶≡ bind M2 (h mx) (h ∘¶ q) ) ]
                        ⊤ )
 
 open IsMonadMorphism public
@@ -90,10 +90,10 @@ morphism : ∀ {ℓ} {M1 M2 : Premonad ℓ} → IsMonadMorphism M1 M2 → {X :{#
 morphism {_} {M1} {M2} h = fst(unmonad-morphism h)
 -}
 
-morph-return-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{¶} MonadMap M1 M2} {h-morph :{#} IsMonadMorphism M1 M2 h} {X :{#} Set ℓ} {x : X}
-                         → h (return M1 x) ≡ return M2 x
+morph-return-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{¶} MonadMap M1 M2} {h-morph :{#} IsMonadMorphism M1 M2 h} {X :{#} Set ℓ} {x :{¶} X}
+                         → h (return M1 x) ¶≡ return M2 x
 morph-return-law {_} {M1} {M2} {h} {h-morph} = ¶fst(unmonad-morphism h-morph)
 
 morph-bind-law : ∀ {ℓ} {M1 M2 :{#} Premonad ℓ} {h :{¶} MonadMap M1 M2} {h-morph :{#} IsMonadMorphism M1 M2 h} {X Y :{#} Set ℓ} {mx :{¶} type M1 X} {q :{¶} (x :{¶} X) → type M1 Y}
-                       → h (bind M1 mx q) ≡ bind M2 (h mx) (h ∘¶ q)
+                       → h (bind M1 mx q) ¶≡ bind M2 (h mx) (h ∘¶ q)
 morph-bind-law {_} {M1} {M2} {h} {h-morph} = ¶fst(¶snd(unmonad-morphism h-morph))

@@ -407,6 +407,8 @@ unique-⊤ x y = unit# {A = λ t → t ≡ y} (unit# {A = λ t' → tt ≡ t'} (
 _¶≡_ : ∀ {ℓ} {A : Set ℓ} (a b :{¶} A) → Set ℓ
 a ¶≡ b = [¶ a , tt ] ≡ [¶ b , tt ]
 
+infix 1 _¶≡_
+
 ¶refl : ∀ {ℓ} {A :{#} Set ℓ} (a :{¶} A) → a ¶≡ a
 ¶refl a = refl [¶ a , tt ]
 
