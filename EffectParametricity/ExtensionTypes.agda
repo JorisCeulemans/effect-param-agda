@@ -18,12 +18,11 @@ infixr 25 _≡⟨_⟩_
 -- The following are supplementary axioms we will use (different versions of function extensionality +
 -- uniqueness of identity proofs).
 postulate
-  irr-funext : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g : .(x : A) → B x} → (.(x : A) → f x ≡ g x) → f ≡ g
   irr-funext-¶eq : ∀ {ℓA ℓB} {A :{#} Set ℓA} {B :{#} .A → Set ℓB} {f g :{¶} .(x : A) → B x} → (.(x : A) → f x ¶≡ g x) → f ¶≡ g
 
-  funext-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
-               {f g :{¶} (a : A) → B a} →
-               ((a :{¶} A) → f a ¶≡ g a) → f ¶≡ g
+  ¶funext-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
+                {f g :{¶} (a :{¶} A) → B a} →
+                ((a :{¶} A) → f a ¶≡ g a) → f ¶≡ g
   #funext-¶eq : ∀{ℓA ℓB} → {A :{#} Set ℓA} → {B :{#} A → Set ℓB} →
                 {f g :{¶} (a :{#} A) → B a} →
                 ((a :{#} A) → f a ¶≡ g a) → f ¶≡ g
@@ -32,6 +31,7 @@ postulate
                           ({a :{#} A} → f {a} ¶≡ g {a}) → (λ {x :{#} _} → f {x}) ¶≡ (λ {x :{#} _} → g {x})
 
   uip : ∀ {ℓ} {A :{#} Set ℓ} {a b :{#} A} {e e' : a ≡ b} → e ≡ e'
+  uip-¶eq : ∀ {ℓ} {A :{#} Set ℓ} {a b :{¶} A} {e e' :{¶} a ¶≡ b} → e ¶≡ e'
 
 
 -- Definition of extension types (taken from https://github.com/Saizan/parametric-demo/tree/experimental)
@@ -136,7 +136,7 @@ glue-prop-cong {A = A} {φ} {T} {f} t t' t-eq = ¶subst {A = PartialP φ (λ o �
                                                                                      glue-prop {f = f} t a peq ≡ glue-prop t y peq')
                                                                              {x₁ = a} {x₂ = a'}
                                                                              a-eq
-                                                                             (λ peq peq' → cong {A = PartialP φ (λ o → a ¶≡ f o (t o))} {B = Glue⟨ A ← T , f ⟩} (glue-prop t a) {a = peq} {b = peq'} (irr-funext (λ { o → uip }))))
+                                                                             (λ peq peq' → ¶≡-to-≡ _ _ (¶cong {A = PartialP φ (λ o → a ¶≡ f o (t o))} {B = Glue⟨ A ← T , f ⟩} (glue-prop {f = f} t a) {a = peq} {b = peq'} (irr-funext-¶eq {f = peq} {g = peq'} (λ { o → uip-¶eq {a = a} {b = f o (t o)} {e = peq o} {e' = peq' o} })))))
 
 glue-prop-eta-helper : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)} →
                        (b :{¶} Glue⟨ A ← T , f ⟩) → PartialP φ (λ o → T o)
@@ -180,7 +180,7 @@ glue-prop-eta {A = A} {φ = φ} {T = T} {f = f} b =
   ≡⟨ refl _ ⟩ glue {f = f}
               (glue-helper1 f (glue-prop-eta-helper {f = f} b))
               (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] (cut (unglue[ f ] b)))
-  ≡⟨ {!!} ⟩ (b ∎)
+  ≡⟨ {!refl _!} ⟩ (b ∎)
   where helper1 = λ { (φ = p⊤) → f itIsOne b }
 
 {-
@@ -285,7 +285,7 @@ endpoint-1 : pm-bridge i1 ≡ κ2
 endpoint-1 = ¶≡-to-≡ _ _ (¶cong (λ x → premonad [ type κ2 , [¶ x , [¶ (λ {_ _ :{#} _} → bind κ2) , tt ] ] ])
                                 {a = λ {X :{#} _} x → h (return κ1 x)} {b = λ {X :{#} _} x → return κ2 x}
                                 (#funext-implicit-¶eq {f = λ {X :{#} _} x → h (return κ1 x)} {g = λ {X :{#} _} x → return κ2 x}
-                                                      (λ {_ :{#} _} → funext-¶eq {f = λ x → h (return κ1 x)} {g = λ x → return κ2 x} h-return-law)))
+                                                      (λ {_ :{#} _} → ¶funext-¶eq {f = λ x → h (return κ1 x)} {g = λ x → return κ2 x} h-return-law)))
              •
              cong (λ x → premonad [ type κ2 ,
                                    [¶ (λ {_ :{#} _} → return κ2) ,

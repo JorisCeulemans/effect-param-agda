@@ -9,7 +9,7 @@ record Premonad (ℓ : Level) : Set (lsuc ℓ) where
   constructor premonad
   field
     unpremonad : Σ[ F ∈ (Set ℓ → Set ℓ) ] (
-                 ¶Σ[ return ∈ ({X :{#} Set ℓ} → X → F X) ] (
+                 ¶Σ[ return ∈ ({X :{#} Set ℓ} → (x :{¶} X) → F X) ] (
                  ¶Σ[ bind ∈ ({X Y :{#} Set ℓ} → (fx :{¶} F X) → (q :{¶} (x :{¶} X) → F Y) → F Y) ] (
                  ⊤ ) ) )
 
@@ -18,7 +18,7 @@ open Premonad public
 type : ∀ {ℓ} → Premonad ℓ → Set ℓ → Set ℓ
 type M = fst(unpremonad M)
 
-return : ∀ {ℓ} (M :{#} Premonad ℓ) → {X :{#} Set ℓ} → X → type M X
+return : ∀ {ℓ} (M :{#} Premonad ℓ) → {X :{#} Set ℓ} → (x :{¶} X) → type M X
 return M = ¶fst(snd(unpremonad M))
 
 bind : ∀ {ℓ} (M :{#} Premonad ℓ) → {X Y :{#} Set ℓ} → (mx :{¶} type M X) → (q :{¶} (x :{¶} X) → type M Y) → type M Y
@@ -39,7 +39,7 @@ premonad-⊤-irrelevant M x = cong (λ y → premonad [ type M ,
                                  (unique-⊤ x (trivial M))
 
 fmap : ∀ {ℓ} (M :{#} Premonad ℓ) {X Y :{#} Set ℓ} → (_ :{¶} X → Y) → (_ :{¶} type M X) → (type M Y)
-fmap M {X} {Y} f mx = bind M mx ((return M {Y}) ∘ f)
+fmap M {X} {Y} f mx = bind M mx (λ x → return M (f x))
 
 join : ∀ {ℓ} (M :{#} Premonad ℓ) {X :{#} Set ℓ} → (_ :{¶} type M (type M X)) → type M X
 join M mmx = bind M mmx id
