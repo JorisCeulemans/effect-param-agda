@@ -92,33 +92,21 @@ glue-cong {t = t}{t'}{a}{a'} t-eq a-eq = glue-cong' t t' t-eq a a' a-eq
 
 -- Glue implemented using extension types (taken from https://github.com/Saizan/parametric-demo/tree/experimental)
 
-glue-helper1 : ∀{ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} (f :{¶} PartialP φ (λ o → T o → A))
-  (t :{¶} PartialP φ T) → PartialP φ T
-glue-helper1 {φ = φ} f t = λ { (φ = p⊤) → t _ }
-
-glue-helper2 : ∀{ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} (f :{¶} PartialP φ (λ o → T o → A))
-  (t :{¶} PartialP φ T) → Partial A φ
-glue-helper2 {φ = φ} f t = λ o → f o (t o)
-
 Glue⟨_←_,_⟩ : ∀{ℓ} (A : Set ℓ) {φ : Prop} (T : Partial (Set ℓ) φ) (f :{¶} PartialP φ (λ o → T o → A)) → Set ℓ
 Glue⟨ A ← T , f ⟩ = Glue A _ T f
 glue⟨_↦_⟩ : ∀{ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)}
-  (t :{¶} PartialP φ T) (exta : A [ (glue-helper2 f t) ]) → Glue⟨ A ← T , f ⟩
+  (t :{¶} PartialP φ T) (exta : A [ (λ o → f o (t o)) ]) → Glue⟨ A ← T , f ⟩
 -- glue⟨_↦_⟩ {φ = φ} {f = f} t exta = glue (λ{(φ = p⊤) → t _}) (paste[ (λ{(φ = p⊤) → f _ (t _)}) ] exta)
-glue⟨_↦_⟩ {φ = φ} {f = f} t exta = glue (glue-helper1 f t) (paste[ (glue-helper2 f t) ] exta)
+glue⟨_↦_⟩ {φ = φ} {f = f} t exta = glue {f = f} (λ _ → t _) (paste[ (λ o → f o (t o)) ] exta)
 unglue[_] : ∀{ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} (f :{¶} PartialP φ (λ o → T o → A))
   → Glue⟨ A ← T , f ⟩ → A
 unglue[_] {A = A} {φ = φ} f g = unglue {_}{_}{A}{φ} g
-
-glue-prop-helper : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} (f :{¶} PartialP φ (λ o → T o → A)) →
-                   (t :{¶} PartialP φ T) → Partial A φ -- .(IsOne φ) → A
-glue-prop-helper f t itIsOne = f itIsOne (t itIsOne)
 
 glue-prop : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)} →
             (t :{¶} PartialP φ T) (a :{¶} A) →
             PartialP φ (λ o → a ¶≡ f o (t o)) →
             Glue⟨ A ← T , f ⟩
-glue-prop {A = A} {φ = φ} {f = f} t a peq = glue⟨ t ↦ ext-subst {_} {A} {φ} (λ _ → a) (glue-prop-helper f t) peq (cut a) ⟩
+glue-prop {A = A} {φ = φ} {f = f} t a peq = glue⟨ t ↦ ext-subst {_} {A} {φ} (λ _ → a) (λ o → f o (t o)) peq (cut a) ⟩
 
 glue-prop-cong : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)} →
                  (t t' :{¶} PartialP φ (λ o → T o)) (t-eq : PartialP φ (λ o → t o ¶≡ t' o)) →
@@ -136,8 +124,12 @@ glue-prop-cong {A = A} {φ} {T} {f} t t' t-eq = ¶subst {A = PartialP φ (λ o �
                                                                                      glue-prop {f = f} t a peq ≡ glue-prop t y peq')
                                                                              {x₁ = a} {x₂ = a'}
                                                                              a-eq
-                                                                             (λ peq peq' → ¶≡-to-≡ _ _ (¶cong {A = PartialP φ (λ o → a ¶≡ f o (t o))} {B = Glue⟨ A ← T , f ⟩} (glue-prop {f = f} t a) {a = peq} {b = peq'} (irr-funext-¶eq {f = peq} {g = peq'} (λ { o → uip-¶eq {a = a} {b = f o (t o)} {e = peq o} {e' = peq' o} })))))
-
+                                                                             (λ peq peq' → ¶≡-to-≡ _ _ (¶cong {A = PartialP φ (λ o → a ¶≡ f o (t o))}
+                                                                                                               {B = Glue⟨ A ← T , f ⟩}
+                                                                                                               (glue-prop {f = f} t a)
+                                                                                                               {a = peq} {b = peq'}
+                                                                                                               (irr-funext-¶eq {f = peq} {g = peq'} (λ o → uip-¶eq {a = a} {b = f o (t o)} {e = peq o} {e' = peq' o})))))
+{-
 glue-prop-eta-helper : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set ℓ) φ} {f :{¶} PartialP φ (λ o → T o → A)} →
                        (b :{¶} Glue⟨ A ← T , f ⟩) → PartialP φ (λ o → T o)
 glue-prop-eta-helper {φ = φ} b = λ { (φ = p⊤) → b }
@@ -152,36 +144,93 @@ glue-prop-eta : ∀ {ℓ} {A :{#} Set ℓ} {φ :{#} Prop} {T :{#} Partial (Set �
 glue-prop-eta {A = A} {φ = φ} {T = T} {f = f} b =
   glue-prop {A = A} {φ = φ} {T = T} {f = f} (glue-prop-eta-helper {f = f} b) (unglue[ f ] b) (glue-prop-eta-helper2 b)
   ≡⟨ refl _ ⟩ glue {f = f}
-                   (glue-helper1 f (glue-prop-eta-helper {f = f} b))
-                   (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] (ext-subst {_} {A} {φ}
+                   (glue-prop-eta-helper {f = f} b)
+                   (paste[ (λ o → f o ((glue-prop-eta-helper {f = f} b) o)) ] (ext-subst {_} {A} {φ}
                                                                                           (λ _ → unglue[ f ] b)
-                                                                                          (glue-prop-helper f (glue-prop-eta-helper {f = f} b))
+                                                                                          (λ o → f o ((glue-prop-eta-helper {f = f} b) o))
                                                                                           (glue-prop-eta-helper2 {f = f} b) (cut (unglue[ f ] b))))
   ≡⟨ refl _ ⟩ glue {f = f}
-                   (glue-helper1 f (glue-prop-eta-helper {f = f} b))
-                   (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] (ext-subst' (partext-¶eq (λ _ → unglue[ f ] b)
-                                                                                                        (glue-prop-helper f (glue-prop-eta-helper {f = f} b))
+                   (glue-prop-eta-helper {f = f} b)
+                   (paste[ (λ o → f o ((glue-prop-eta-helper {f = f} b) o)) ] (ext-subst' (partext-¶eq (λ _ → unglue[ f ] b)
+                                                                                                        (λ o → f o ((glue-prop-eta-helper {f = f} b) o))
                                                                                                         (glue-prop-eta-helper2 {f = f} b))
                                                                                            (cut (unglue[ f ] b))))
   ≡⟨ cong (λ y → glue {f = f}
-                 (glue-helper1 f (glue-prop-eta-helper {f = f} b))
-                 (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] (ext-subst' y (cut (unglue[ f ] b)))))
+                 (glue-prop-eta-helper {f = f} b)
+                 (paste[ (λ o → f o ((glue-prop-eta-helper {f = f} b) o)) ] (ext-subst' y (cut (unglue[ f ] b)))))
           uip ⟩
      glue {f = f}
-          (glue-helper1 f (glue-prop-eta-helper {f = f} b))
-          (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] (ext-subst' (refl [¶ helper1 , tt ]) (cut (unglue[ f ] b))))
+          (glue-prop-eta-helper {f = f} b)
+          (paste[ (λ o → f o ((glue-prop-eta-helper {f = f} b) o)) ] (ext-subst' (refl [¶ helper1 , tt ]) (cut (unglue[ f ] b))))
   ≡⟨ cong (λ y → glue {f = f}
-                 (glue-helper1 f (glue-prop-eta-helper {f = f} b))
-                 (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] y))
+                 (glue-prop-eta-helper {f = f} b)
+                 (paste[ (λ o → f o ((glue-prop-eta-helper {f = f} b) o)) ] y))
           {!!} ⟩ -- rw-Jβ {A = ¶Σ (Partial A φ) (λ _ → ⊤)} {a = [¶ helper1 , tt ]} (λ y w → A [ ¶fst y ]) (cut (unglue[ f ] b))
      glue {f = f}
-          (glue-helper1 f (glue-prop-eta-helper {f = f} b))
-          (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] (J (refl [¶ helper1 , tt ]) (λ y w → A [ ¶fst y ]) (cut (unglue[ f ] b))))
+          (glue-prop-eta-helper {f = f} b)
+          (paste[ (λ o → f o ((glue-prop-eta-helper {f = f} b) o)) ] (J (refl [¶ helper1 , tt ]) (λ y w → A [ ¶fst y ]) (cut (unglue[ f ] b))))
   ≡⟨ refl _ ⟩ glue {f = f}
-              (glue-helper1 f (glue-prop-eta-helper {f = f} b))
-              (paste[ (glue-helper2 f (glue-prop-eta-helper {f = f} b)) ] (cut (unglue[ f ] b)))
-  ≡⟨ {!refl _!} ⟩ (b ∎)
+                  (glue-prop-eta-helper {f = f} b)
+                  (paste[ (λ o → f o ((glue-prop-eta-helper {f = f} b) o)) ] (cut (unglue[ f ] b)))
+  ≡⟨ refl _ ⟩ glue {f = f}
+                 (glue-prop-eta-helper {f = f} b)
+                 (paste[ (λ { (φ = p⊤) → unglue[ f ] b }) ] (cut {φ = φ} (unglue[ f ] b)))
+  ≡⟨ {!!} ⟩ (b ∎)
   where helper1 = λ { (φ = p⊤) → f itIsOne b }
+-}
+
+-- Trying to implement the above for φ = (i ≣ i0) or (i ≣ i1)
+ψ : 𝕀 → Prop
+ψ i = (i ≣ i0) ∨ (i ≣ i1)
+
+glue-prop-eta-helper : ∀ {ℓ} {A :{#} Set ℓ} (i :{#} 𝕀) {T :{#} Partial (Set ℓ) (ψ i)} {f :{¶} PartialP (ψ i) (λ o → T o → A)} →
+                       (b :{¶} Glue⟨ A ← T , f ⟩) → PartialP (ψ i) (λ o → T o)
+glue-prop-eta-helper i b = λ { ((i ≣ i0) = p⊤) → b ; ((i ≣ i1) = p⊤) → b }
+
+glue-prop-eta-helper2 : ∀ {ℓ} {A :{#} Set ℓ} (i :{#} 𝕀) {T :{#} Partial (Set ℓ) (ψ i)} {f :{¶} PartialP (ψ i) (λ o → T o → A)} →
+                        (b :{¶} Glue⟨ A ← T , f ⟩) → PartialP (ψ i) (λ o → unglue[ f ] b ¶≡ f o (glue-prop-eta-helper i b o))
+glue-prop-eta-helper2 i {f = f} b = λ { ((i ≣ i0) = p⊤) → ¶refl (f _ b) ; ((i ≣ i1) = p⊤) → ¶refl (f _ b) }
+
+glue-prop-eta : ∀ {ℓ} {A :{#} Set ℓ} {i :{#} 𝕀} {T :{#} Partial (Set ℓ) (ψ i)} {f :{¶} PartialP (ψ i) (λ o → T o → A)} →
+                (b :{¶} Glue⟨ A ← T , f ⟩) →
+                glue-prop {A = A} {φ = ψ i} {T = T} {f = f} (glue-prop-eta-helper i b) (unglue[ f ] b) (glue-prop-eta-helper2 i b) ≡ b
+glue-prop-eta {A = A} {i = i} {T = T} {f = f} b =
+  glue-prop {A = A} {φ = ψ i} {T = T} {f = f} (glue-prop-eta-helper i {f = f} b) (unglue[ f ] b) (glue-prop-eta-helper2 i b)
+  ≡⟨ refl _ ⟩ glue {f = f}
+                   (glue-prop-eta-helper i {f = f} b)
+                   (paste[ (λ o → f o ((glue-prop-eta-helper i {f = f} b) o)) ] ext-subst {_} {A} {ψ i}
+                                                                                                 (λ _ → unglue[ f ] b)
+                                                                                                 (λ o → f o ((glue-prop-eta-helper i {f = f} b) o))
+                                                                                                 (glue-prop-eta-helper2 i {f = f} b)
+                                                                                                 (cut (unglue[ f ] b)))
+  ≡⟨ refl _ ⟩ glue {f = f}
+                   (glue-prop-eta-helper i {f = f} b)
+                   (paste[ (λ o → f o ((glue-prop-eta-helper i {f = f} b) o)) ] (ext-subst' (partext-¶eq (λ _ → unglue[ f ] b)
+                                                                                                          (λ o → f o ((glue-prop-eta-helper i {f = f} b) o))
+                                                                                                          (glue-prop-eta-helper2 i {f = f} b))
+                                                                                             (cut (unglue[ f ] b))))
+  ≡⟨ cong (λ y → glue {f = f}
+                 (glue-prop-eta-helper i {f = f} b)
+                 (paste[ (λ o → f o ((glue-prop-eta-helper i {f = f} b) o)) ] (ext-subst' y (cut (unglue[ f ] b)))))
+          uip ⟩
+     glue {f = f}
+          (glue-prop-eta-helper i {f = f} b)
+          (paste[ (λ o → f o ((glue-prop-eta-helper i {f = f} b) o)) ] (ext-subst' (refl [¶ helper1 , tt ]) (cut (unglue[ f ] b))))
+  ≡⟨ cong (λ y → glue {f = f}
+                 (glue-prop-eta-helper i {f = f} b)
+                 (paste[ (λ o → f o ((glue-prop-eta-helper i {f = f} b) o)) ] y))
+          {!!} ⟩ -- rw-Jβ {A = ¶Σ (Partial A φ) (λ _ → ⊤)} {a = [¶ helper1 , tt ]} (λ y w → A [ ¶fst y ]) (cut (unglue[ f ] b))
+     glue {f = f}
+          (glue-prop-eta-helper i {f = f} b)
+          (paste[ (λ o → f o ((glue-prop-eta-helper i {f = f} b) o)) ] (J (refl [¶ helper1 , tt ]) (λ y w → A [ ¶fst y ]) (cut (unglue[ f ] b))))
+  ≡⟨ refl _ ⟩ glue {f = f}
+                  (glue-prop-eta-helper i {f = f} b)
+                  (paste[ (λ o → f o ((glue-prop-eta-helper i {f = f} b) o)) ] (cut (unglue[ f ] b)))
+  ≡⟨ refl _ ⟩ glue {f = f}
+                 (glue-prop-eta-helper i {f = f} b)
+                 (paste[ (λ { ((i ≣ i0) = p⊤) → unglue[ f ] b ; ((i ≣ i1) = p⊤) → unglue[ f ] b }) ] (cut {φ = ψ i} (unglue[ f ] b)))
+  ≡⟨ {!cong (λ x → glue {f = f} (glue-prop-eta-helper i {f = f} b) x) ?!} ⟩ (b ∎)
+  where helper1 = λ { ((i ≣ i0) = p⊤) → f _ b ; ((i ≣ i1) = p⊤) → f _ b }
 
 {-
   rw-Jβ : ∀{ℓA ℓC} →
@@ -195,7 +244,7 @@ glue-prop-eta {A = A} {φ = φ} {T = T} {f = f} b =
 
 
 {-
--- glue-cong using equality of pointwise pairs (meeting Dominique 20/10/19) ...
+-- glue-cong using equality of pointwise pairs (meeting Dominique 20/12/19) ...
 glue-cong : ∀ {la lb} {A :{#} Set la} {φ :{#} Prop} {T :{#} .(IsOne φ) → Set lb} {f :{¶} .(o : IsOne φ) → T o → A} →
             (p p' : ¶Σ (.(o : IsOne φ) → T o) (λ t → A [ (λ o → f o (t o)) ])) → p ≡ p' →
             glue {f = f} (¶fst p) (paste[ (λ o → f o (¶fst p o)) ] (¶snd p)) ≡ glue (¶fst p') (paste[ (λ o → f o (¶fst p' o)) ] (¶snd p'))
@@ -263,11 +312,16 @@ h-bridge X = / h {X} /
 type-op-bridge :{#} 𝕀 → Set ℓ → Set ℓ
 type-op-bridge i X = h-bridge X i
 
+bind-helper : {X :{#} Set ℓ} {i :{#} 𝕀} → type κ1 X → type κ2 X →
+              PartialP {ℓ} ((i ≣ i0) ∨ (i ≣ i1)) (λ { ((i ≣ i0) = p⊤) → type κ1 X ; ((i ≣ i1) = p⊤) → type κ2 X })
+bind-helper {i = i} x1 x2 = λ { ((i ≣ i0) = p⊤) → x1 ; ((i ≣ i1) = p⊤) → x2 }
+
 -- Bridge in Premonad from κ1 to κ2
 pm-bridge :{#} 𝕀 → Premonad ℓ
 pm-bridge i = premonad [ type-op-bridge i ,
                        [¶ (λ {X :{#} Set ℓ} x → push (h {X}) i (return κ1 x) ) ,
-                       [¶ (λ {X Y :{#} Set ℓ} brx q → glue-prop (λ { ((i ≣ i0) = p⊤) → bind κ1 brx q ;
+                       [¶ (λ {X Y :{#} Set ℓ} brx q → glue-prop -- {!bind-helper {X} {i} {!bind κ1 brx q!} {!bind κ2 brx q!}!}
+                                                                 (λ { ((i ≣ i0) = p⊤) → bind κ1 brx q ;
                                                                       ((i ≣ i1) = p⊤) → bind κ2 brx q })
                                                                  (bind κ2 (pull (h {X}) i brx) ((pull (h {Y}) i) ∘¶ q))
                                                                  (λ { ((i ≣ i0) = p⊤) → ¶sym {a = h (bind κ1 brx q)} {b = bind κ2 (h brx) (h ∘¶ q)} h-bind-law ;
@@ -292,15 +346,15 @@ endpoint-1 = ¶≡-to-≡ _ _ (¶cong (λ x → premonad [ type κ2 , [¶ x , [�
                                    [¶ (λ {_ _ :{#} _} → bind κ2) ,
                                    x ] ] ])
                   (unique-⊤ tt (trivial κ2))
-{-
+
 monad-law-br1 : (i : 𝕀) (X Y :{#} Set ℓ) (x :{¶} X) (q :{¶} (x :{¶} X) → type (pm-bridge i) Y) → bind (pm-bridge i) (return (pm-bridge i) x) q ≡ q x
 monad-law-br1 i X Y x q = bind (pm-bridge i) (return (pm-bridge i) x) q
-  ≡⟨ refl _ ⟩ glue-prop (λ { ((i ≣ i0) = p⊤) → bind κ1 (return κ1 x) q ;
-                             ((i ≣ i1) = p⊤) → bind κ2 (h (return κ1 x)) q })
+  ≡⟨ {!refl _!} ⟩ glue-prop (λ { ((i ≣ i0) = p⊤) → bind κ1 (return κ1 x) q ;
+                                ((i ≣ i1) = p⊤) → bind κ2 (h (return κ1 x)) q })
                        (bind κ2 (h (return κ1 x)) ((pull (h {Y}) i) ∘¶ q))
                        (λ { ((i ≣ i0) = p⊤) → ¶sym {a = h (bind κ1 (return κ1 x) q)} {b = bind κ2 (h (return κ1 x)) (h ∘¶ q)} h-bind-law ;
                             ((i ≣ i1) = p⊤) → ¶refl (bind κ2 (h (return κ1 x)) q) })
-  ≡⟨ ¶J-app (h (return κ1 x)) (return κ2 x) (h-return-law x)
+  {-≡⟨ ¶J-app (h (return κ1 x)) (return κ2 x) (h-return-law x)
             (λ y w → glue-prop (λ { ((i ≣ i0) = p⊤) → bind κ1 (return κ1 x) q ;
                                      ((i ≣ i1) = p⊤) → bind κ2 y q })
                                 (bind κ2 y ((pull (h {Y}) i) ∘¶ q))
@@ -318,8 +372,8 @@ monad-law-br1 i X Y x q = bind (pm-bridge i) (return (pm-bridge i) x) q
                                              {c = h (bind κ1 (return κ1 x) q)}
                                              (¶cong (λ (z :{¶} _) → bind κ2 z (h ∘¶ q)) (¶sym {a = h (return κ1 x)} {b = return κ2 x} (h-return-law x)))
                                              (¶sym {a = h (bind κ1 (return κ1 x) q)} {b = bind κ2 (h (return κ1 x)) (h ∘¶ q)} h-bind-law) ;
-                   ((i ≣ i1) = p⊤) → ¶refl (bind κ2 (return κ2 x) q) })
-  ≡⟨ glue-prop-cong (λ { ((i ≣ i0) = p⊤) → bind κ1 (return κ1 x) q ;
+                   ((i ≣ i1) = p⊤) → ¶refl (bind κ2 (return κ2 x) q) })-}
+  ≡⟨ {!glue-prop-cong (λ { ((i ≣ i0) = p⊤) → bind κ1 (return κ1 x) q ;
                          ((i ≣ i1) = p⊤) → bind κ2 (return κ2 x) q })
                     (λ { ((i ≣ i0) = p⊤) → q x ; ((i ≣ i1) = p⊤) → q x })
                     (λ { ((i ≣ i0) = p⊤) → return-law1 κ1-mon ; ((i ≣ i1) = p⊤) → return-law1 κ2-mon })
@@ -332,11 +386,12 @@ monad-law-br1 i X Y x q = bind (pm-bridge i) (return (pm-bridge i) x) q
                                              (¶cong (λ (z :{¶} _) → bind κ2 z (h ∘¶ q)) (¶sym {a = h (return κ1 x)} {b = return κ2 x} (h-return-law x)))
                                              (¶sym {a = h (bind κ1 (return κ1 x) q)} {b = bind κ2 (h (return κ1 x)) (h ∘¶ q)} h-bind-law) ;
                          ((i ≣ i1) = p⊤) → ¶refl (bind κ2 (return κ2 x) q) })
-                    (λ { ((i ≣ i0) = p⊤) → ¶refl (h (q x)) ; ((i ≣ i1) = p⊤) → ¶refl (q x) }) ⟩
-    glue-prop {-(λ { ((i ≣ i0) = p⊤) → q x ;
-                   ((i ≣ i1) = p⊤) → q x })-}
-              (glue-prop-eta-helper (q x))
+                    (λ { ((i ≣ i0) = p⊤) → ¶refl (h (q x)) ; ((i ≣ i1) = p⊤) → ¶refl (q x) })!} ⟩
+    glue-prop {T = helperT}
+              (glue-prop-eta-helper i {T = helperT} (q x))
               (unglue[ (λ { ((i ≣ i0) = p⊤) → h {Y} ; ((i ≣ i1) = p⊤) → id }) ] (q x))
-              (λ { ((i ≣ i0) = p⊤) → ¶refl (h (q x)) ; ((i ≣ i1) = p⊤) → ¶refl (q x) })
-  ≡⟨ glue-prop-eta {φ = (i ≣ i0) ∨ (i ≣ i1)} (q x) ⟩ (q x ∎)
--}
+              (glue-prop-eta-helper2 i (q x))
+  ≡⟨ glue-prop-eta {i = i} (q x) ⟩ (q x ∎)
+  where
+    helperT :{#} _
+    helperT = λ { ((i ≣ i0) = p⊤) → type κ1 Y ; ((i ≣ i1) = p⊤) → type κ2 Y }
